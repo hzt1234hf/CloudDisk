@@ -1,0 +1,7 @@
+/venv/
+/mydb.db
+/peeweeTest.py
+/test.db
+/test.py
+/.idea
+/__pycache__

@@ -1,0 +1,13 @@
+#loginForm {
+    display: flex;
+    margin: 10px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 200px;
+}
+
+#submitButton {
+    margin: 5px;
+    width: 100px;
+}
