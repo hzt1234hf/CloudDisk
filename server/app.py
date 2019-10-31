@@ -1,5 +1,8 @@
+import hashlib
+import os
+
 import peewee
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file
 from peewee import *
 from itsdangerous import (TimedJSONWebSignatureSerializer as URLSafeSerializer, BadSignature, SignatureExpired)
 from functools import wraps
@@ -51,6 +54,25 @@ def authorization_required(f):
     return wrapper
 
 
+def generate_filename(folder, filename):
+    return hashlib.md5((folder + '_' + filename).encode('utf-8')).hexdigest()
+
+
+def base36_encode(number):
+    assert number >= 0, 'positive integer required'
+    if number == 0:
+        return '0'
+    base36 = []
+    while number != 0:
+        number, i = divmod(number, 36)
+        base36.append('0123456789abcdefghijklmnopqrstuvwxyz'[i])
+    return ''.join(reversed(base36))
+
+
+# def generate_url():
+#     return base36_encode(get_random_long_int())
+
+
 @app.route('/login', methods=['POST'])
 def login():
     req = request.get_json()
@@ -94,7 +116,7 @@ def folders():
             return jsonify(message='ok', data=[])
 
 
-@app.route('/folders/<folder_name>', methods=['GET', 'DELETE'])
+@app.route('/folders/<folder_name>', methods=['GET', 'POST', 'DELETE'])
 # TODO: @authorization_required
 def folder(folder_name):
     try:
@@ -102,7 +124,25 @@ def folder(folder_name):
     except peewee.DoesNotExist:
         return jsonify(message='error'), 404
     if request.method == 'GET':
-        return jsonify(message='OK', data=model_to_dict(folder))
+        return jsonify(message='OK', data=model_to_dict(folder, backrefs=True))
+
+    if request.method == 'POST':
+        f = request.files['file']
+        print(f)
+        if f:
+            actual_filename = generate_filename(folder_name, f.filename)
+            print(actual_filename)
+            target_file = os.path.join(os.path.expanduser(app.config['UPLOAD_FOLDER']), actual_filename)
+            print(target_file)
+            if os.path.exists(target_file):
+                return jsonify(message='error'), 409
+            try:
+                f.save(target_file)
+                f2 = File.create(folder=folder, filename=f.filename)
+                f2.save()
+            except Exception as e:
+                app.logger.exception(e)
+                return jsonify(message='error'), 500
 
     if request.method == 'DELETE':
         try:
@@ -110,6 +150,37 @@ def folder(folder_name):
         except peewee.IntegrityError:
             return jsonify(message='error'), 409
     return jsonify(message='OK')
+
+
+@app.route('/folders/<folder_name>/<filename>', methods=['GET', 'DELETE'])
+# TODO: @authorization_required
+def files(folder_name, filename):
+    actual_filename = generate_filename(folder_name, filename)
+    target_file = os.path.join(os.path.expanduser(app.config['UPLOAD_FOLDER']), actual_filename)
+    try:
+        f = File.get(filename=filename)
+    except peewee.DoesNotExist:
+        return jsonify(message='error'), 404
+    if request.method == 'GET':
+        args = request.args
+        if 'query' in args and args['query'] == 'info':
+            return jsonify(message='OK', data=model_to_dict(f))
+        if os.path.exists(target_file):
+            return send_file(target_file)
+        else:
+            return jsonify(message='error'), 404
+
+    if request.method == 'DELETE':
+        if os.path.exists(target_file):
+            try:
+                f.delete_instance()
+                os.remove(target_file)
+                return jsonify(message='OK')
+            except Exception as e:
+                app.logger.exception(e)
+                return jsonify(message='error'), 500
+        else:
+            return jsonify(message='error'), 404
 
 
 if __name__ == '__main__':

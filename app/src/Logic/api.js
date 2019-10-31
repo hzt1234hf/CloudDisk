@@ -57,6 +57,28 @@ const Api = {
                 'Accept': 'application/json'
             }
         });
+    },
+    uploadFile(folder, file) {
+        let data = new FormData();
+        data.append('file', file);
+        return fetch(this.BASE_API + '/folders/' + folder, {
+            method: 'POST',
+            body: data,
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+    },
+    deleteFile(folder, file) {
+        return fetch(this.BASE_API + '/folders/' + folder + '/' + file, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+            }
+        });
+    },
+    downloadFile(folder, file) {
+        return this.BASE_API + '/folders/' + folder + '/' + file;
     }
 
 }
