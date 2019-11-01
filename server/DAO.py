@@ -1,6 +1,7 @@
 from peewee import *
 
-db = SqliteDatabase('mydb.db', pragmas=(('foreign_keys', 'on'),))
+# db = SqliteDatabase('mydb.db', pragmas=(('foreign_keys', 'on'),))
+db = SqliteDatabase('mydb.db')
 
 
 class BaseModel(Model):
@@ -9,11 +10,13 @@ class BaseModel(Model):
 
 
 class Folder(BaseModel):
-    name = CharField(max_length=64, unique=True)
+    id = BigIntegerField(primary_key=True)
+    name = CharField(max_length=255)
+    path = TextField()
+    parentid = BigIntegerField()
 
 
 class File(BaseModel):
-    folder = ForeignKeyField(Folder, backref='files')
-    filename = CharField()
-
-
+    id = BigIntegerField(primary_key=True)
+    name = CharField(max_length=255)
+    folderid = BigIntegerField()

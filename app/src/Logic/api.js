@@ -1,8 +1,8 @@
 const Api = {
-    BASE_API: 'http://localhost:5000',
+    SERVER_API: 'http://localhost:5000',
 
     login(email, password) {
-        return fetch(this.BASE_API + "/login", {
+        return fetch(this.SERVER_API + "/login", {
             method: 'POST',
             body: JSON.stringify({email: email, password: password}),
             headers: {
@@ -14,7 +14,7 @@ const Api = {
 
     // 由于跨域的问题，我们暂时不能使用 Cookie 来认证，这里改用 Header 进行认证
     auth(token) {
-        return fetch(this.BASE_API + "/auth", {
+        return fetch(this.SERVER_API + "/auth", {
             method: 'GET',
             headers: {
                 'Authorization': token,
@@ -25,43 +25,43 @@ const Api = {
     },
 
     getFolders() {
-        return fetch(this.BASE_API + "/folders", {
+        return fetch(this.SERVER_API + "/folders", {
             method: 'GET',
             headers: {
                 'Accept': 'application/json'
             }
         });
     },
-    getFolder(name) {
-        return fetch(this.BASE_API + '/folders/' + name, {
+    getFolder(id) {
+        return fetch(this.SERVER_API + '/folders/' + id, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json'
             }
         });
     },
-    addFolder(name) {
-        return fetch(this.BASE_API + "/folders", {
+    addFolder(name, id) {
+        return fetch(this.SERVER_API + "/folders", {
             method: 'POST',
-            body: JSON.stringify({name: name}),
+            body: JSON.stringify({name: name, parentid: id}),
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             }
         });
     },
-    deleteFolder(name) {
-        return fetch(this.BASE_API + '/folders/' + name, {
+    deleteFolder(id) {
+        return fetch(this.SERVER_API + '/folders/' + id, {
             method: 'DELETE',
             headers: {
                 'Accept': 'application/json'
             }
         });
     },
-    uploadFile(folder, file) {
+    uploadFile(folderid, file) {
         let data = new FormData();
         data.append('file', file);
-        return fetch(this.BASE_API + '/folders/' + folder, {
+        return fetch(this.SERVER_API + '/folders/' + folderid, {
             method: 'POST',
             body: data,
             headers: {
@@ -69,18 +69,18 @@ const Api = {
             }
         });
     },
-    deleteFile(folder, file) {
-        return fetch(this.BASE_API + '/folders/' + folder + '/' + file, {
+    deleteFile(fileid) {
+        return fetch(this.SERVER_API + '/files/' + fileid, {
             method: 'DELETE',
             headers: {
                 'Accept': 'application/json',
             }
         });
     },
-    downloadFile(folder, file) {
-        return this.BASE_API + '/folders/' + folder + '/' + file;
+    downloadFile(fileid) {
+        return this.SERVER_API + '/files/' + fileid;
     }
 
-}
+};
 
 export default Api;
