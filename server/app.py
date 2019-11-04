@@ -2,8 +2,8 @@ import hashlib
 import os
 
 import peewee
+import random
 from flask import Flask, jsonify, request, send_file
-from peewee import *
 from itsdangerous import (TimedJSONWebSignatureSerializer as URLSafeSerializer, BadSignature, SignatureExpired)
 from functools import wraps
 from flask_cors import CORS, cross_origin
@@ -69,15 +69,18 @@ def base36_encode(number):
     return ''.join(reversed(base36))
 
 
-# def generate_url():
-#     return base36_encode(get_random_long_int())
+def generate_url():
+    return base36_encode(get_random_long_int())
+
+
+def get_random_long_int():
+    return random.SystemRandom().randint(1000000000, 9999999999)
+    # return _random.randint(1000000000, 9999999999)
 
 
 @app.route('/login', methods=['POST'])
 def login():
     req = request.get_json()
-
-    print(req)
     # 验证用户名密码
     if req['email'] == app.config['EMAIL'] and req['password'] == app.config['PASSWORD']:
         # 生成 Token，有效期为一周
@@ -100,8 +103,6 @@ def auth():
 def folders():
     if request.method == 'POST':
         req = request.get_json()
-        print(req)
-        print(request.get_data())
         try:
             f = Folder.create(name=req['name'])
             f.save()
@@ -124,21 +125,24 @@ def folder(folder_name):
     except peewee.DoesNotExist:
         return jsonify(message='error'), 404
     if request.method == 'GET':
-        return jsonify(message='OK', data=model_to_dict(folder, backrefs=True))
+        res = model_to_dict(folder, backrefs=True)
+        for file in res['files']:
+            if not file['open_public_share']:
+                file['public_share_url'] = '未设置分享！'
+
+        return jsonify(message='OK', data=res)
 
     if request.method == 'POST':
         f = request.files['file']
-        print(f)
         if f:
             actual_filename = generate_filename(folder_name, f.filename)
-            print(actual_filename)
             target_file = os.path.join(os.path.expanduser(app.config['UPLOAD_FOLDER']), actual_filename)
-            print(target_file)
             if os.path.exists(target_file):
                 return jsonify(message='error'), 409
             try:
                 f.save(target_file)
-                f2 = File.create(folder=folder, filename=f.filename)
+                f2 = File.create(folder=folder, filename=f.filename, public_share_url=generate_url(),
+                                 open_public_share=False)
                 f2.save()
             except Exception as e:
                 app.logger.exception(e)
@@ -149,10 +153,10 @@ def folder(folder_name):
             folder.delete_instance()
         except peewee.IntegrityError:
             return jsonify(message='error'), 409
-    return jsonify(message='OK')
+    return jsonify(message='OK'), 201
 
 
-@app.route('/folders/<folder_name>/<filename>', methods=['GET', 'DELETE'])
+@app.route('/folders/<folder_name>/<filename>', methods=['GET', 'DELETE', 'PATCH'])
 # TODO: @authorization_required
 def files(folder_name, filename):
     actual_filename = generate_filename(folder_name, filename)
@@ -161,9 +165,20 @@ def files(folder_name, filename):
         f = File.get(filename=filename)
     except peewee.DoesNotExist:
         return jsonify(message='error'), 404
+    if request.method == 'PATCH':
+        share_type = request.args.get('shareType')
+        if share_type == 'public':
+            f.open_public_share = True
+        elif share_type == 'none':
+            f.open_public_share = False
+        f.save()
+        return jsonify(message='OK')
+
     if request.method == 'GET':
         args = request.args
         if 'query' in args and args['query'] == 'info':
+            if not f.open_public_share:
+                f.public_share_url = '未设置分享！'
             return jsonify(message='OK', data=model_to_dict(f))
         if os.path.exists(target_file):
             return send_file(target_file)
@@ -181,6 +196,74 @@ def files(folder_name, filename):
                 return jsonify(message='error'), 500
         else:
             return jsonify(message='error'), 404
+
+
+@app.route('/share/<path>', methods=['GET'])
+def share(path):
+    is_public = False
+    try:
+        f = File.get(File.public_share_url == path)
+        actual_filename = generate_filename(f.folder.name, f.filename)
+        print(actual_filename)
+        target_file = os.path.join(os.path.expanduser(app.config['UPLOAD_FOLDER']), actual_filename)
+        print(target_file)
+        is_public = True
+    except peewee.DoesNotExist:
+        return jsonify(message='error'), 404
+    if not (is_public and f.open_public_share):
+        return jsonify(message='error'), 404
+
+    s = URLSafeSerializer(app.config['SECRET_KEY'], expires_in=24 * 3600)
+    args = request.args
+    print("key")
+    print(path)
+    print(args)
+    print(args.get('download'))
+    if args.get('download') == 'true':
+        # return send_file(target_file, attachment_filename="1111")
+        token = None
+        cookies = request.cookies
+        print(request.cookies)
+        print("dd1")
+        if 'token' in cookies:
+            token = cookies['token']
+            print(token)
+            try:
+                print(1)
+                data = s.loads(token)
+                print(2)
+                if data['path'] == path:
+                    if os.path.exists(target_file):
+                        print("download")
+                        print(target_file)
+                        # filename = quote(f.filename)
+                        rv = send_file(target_file, as_attachment=True, attachment_filename=f.filename)
+                        # if filename != f.filename:  # 支持中文名称
+                        #     rv.headers['Content-Disposition'] += "; filename*=utf-8''%s" % (filename)
+                        return rv
+                    else:
+                        print("download error")
+                        return jsonify(message='error'), 404
+                else:
+                    print("path error")
+                    print(data['path'])
+                    return jsonify(message='unauthorized'), 401
+            except Exception as e:
+                print(e)
+                print("unauthorized error")
+                return jsonify(message='unauthorized'), 401
+        else:
+            print("token error")
+
+    token = s.dumps({'path': path}).decode('utf-8')
+    payload = {
+        'filename': f.filename,
+        'folder': f.folder.name,
+        'open_public_share': f.open_public_share,
+        'token': token,
+    }
+    print(token)
+    return jsonify(message='OK', data=payload)
 
 
 if __name__ == '__main__':

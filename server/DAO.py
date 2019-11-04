@@ -15,5 +15,7 @@ class Folder(BaseModel):
 class File(BaseModel):
     folder = ForeignKeyField(Folder, backref='files')
     filename = CharField()
+    public_share_url = CharField()
+    open_public_share = BooleanField()
 
 
