@@ -18,6 +18,7 @@
     - 修改教程中部分错误代码，请与官网源码对比
 - 使用步骤：
     - 后台Flask：
+    
         0. 需要安装好Pycharm
         1. 使用Pycharm打开server文件夹的项目
         2. 可以新建一个本地的venv环境，也可使用全局的python解释器
@@ -27,6 +28,7 @@
         ![Alt text](img/appConfig/2.jpg)
         6. 可以直接运行app.py，因为static文件夹包含了已经部署好的前端代码，浏览器输入localhost:5000进入主页；账号是test@163.com，密码是test
     - 前端React：
+    
         0. 需要配置好npm，可以安装node.js，此项目使用的是v10.16.3版本；安装Idea；
         1. 使用Idea打开app路径下的项目
         2. 配置编译环境，点击Add Configuration，再点击加号，添加npm，在右边scripts填入'start'
