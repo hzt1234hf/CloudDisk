@@ -24,15 +24,21 @@
         3. 之后安装被标记的未安装的依赖
         4. flask相关配置在config.py文件里
         5. 运行DBCreate.py建立数据库，在根目录下新建upload文件夹
+        ![Alt text](img/appConfig/2.jpg)
         6. 可以直接运行app.py，因为static文件夹包含了已经部署好的前端代码，浏览器输入localhost:5000进入主页；账号是test@163.com，密码是test
     - 前端React：
         0. 需要配置好npm，可以安装node.js，此项目使用的是v10.16.3版本；安装Idea；
         1. 使用Idea打开app路径下的项目
         2. 配置编译环境，点击Add Configuration，再点击加号，添加npm，在右边scripts填入'start'
+        ![Alt text](img/appConfig/1.jpg)
         3. 点击右下方的npm install安装依赖
         4. 开启后台服务器后可以使用前端访问，注意，跨域问题可能导致无法验证cookie登录状态！
 - 展示：
-
+![Alt text](img/show/1.jpg)
+![Alt text](img/show/2.jpg)
+![Alt text](img/show/3.jpg)
+![Alt text](img/show/4.jpg)
+![Alt text](img/show/5.jpg)
 ### 修改后的工程
 - 功能：
     1. 目录可以嵌套，可以通过硬盘访问，可以检测硬盘文件、文件夹内容改变
