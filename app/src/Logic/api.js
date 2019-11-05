@@ -80,8 +80,15 @@ const Api = {
     downloadFile(folder, file) {
         return this.BASE_API + '/folders/' + folder + '/' + file;
     },
+    getFileInfo(folder, file) {
+        return fetch(this.BASE_API + '/folders/' + folder + '/' + file + "?query=info", {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+            }
+        });
+    },
     generateShareFileDownloadUrl(url) {
-        console.log(this.BASE_API + "/share/" + url + "?download=true");
         return this.BASE_API + "/share/" + url + "?download=true";
     },
 
@@ -94,15 +101,17 @@ const Api = {
         });
     },
 
-    getFileInfoWithShareUrl(url) {
-        return fetch(this.BASE_API + "/share/" + url, {
+    getFileInfoWithShareUrl(url, password = null) {
+        let addr = this.BASE_API + "/share/" + url;
+        if (password != null)
+            addr += "?password=" + password;
+        return fetch(addr, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
-            },
+            }
         });
-    },
-
+    }
 }
 
 export default Api;

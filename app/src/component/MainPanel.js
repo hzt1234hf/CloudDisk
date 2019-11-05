@@ -3,7 +3,11 @@ import Api from '../Logic/api'
 import './MainPanel.css';
 import $ from 'jquery'
 import swal from 'sweetalert';
-import Octicon, {File, FileDirectory, X} from '@primer/octicons-react'
+import QRCode from 'qrcode.react';
+
+import Octicon from 'react-octicon'
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
+import {faFile, faFolder, faFileDownload, faFileUpload} from '@fortawesome/free-solid-svg-icons'
 
 class MainPanel extends Component {
     constructor(props) {
@@ -21,6 +25,7 @@ class MainPanel extends Component {
 
             selectedFolder: '',
             selectedFile: '',
+            selectedFileId: 0,
 
         };
         this.addFolder = this.addFolder.bind(this);
@@ -50,9 +55,7 @@ class MainPanel extends Component {
         }
         Api.getFolder(this.state.selectedFolder.name).then(response => {
             if (response.ok) {
-
                 response.json().then(responseJson => {
-                    console.log(responseJson);
                     this.setState({
                         files: responseJson.data.files,
                     });
@@ -78,7 +81,6 @@ class MainPanel extends Component {
     }
 
     deleteFolder(folderName) {
-        console.log("???");
         swal({
             title: "确定删除文件夹 " + folderName + " 吗？",
             text: "删除后文件夹内容不可恢复！",
@@ -183,20 +185,22 @@ class MainPanel extends Component {
 
     saveFileShareType(isShared) {
         let shareType = "none";
-        if (isShared)
+        if (isShared == 1)
+            shareType = "private";
+        else if (isShared == 2)
             shareType = "public";
-        console.log(shareType);
         Api.updateFileShareType(this.state.selectedFolder.name, this.state.selectedFile.filename, shareType).then(response => {
             if (response.ok) {
-                console.log("???");
-                console.log(this.state.selectedFile.open_public_share);
-
-                this.setState({
-                    showFileShareDialog: false
-                }, () => {
-                    this.refreshFileList();
+                Api.getFileInfo(this.state.selectedFolder.name, this.state.selectedFile.filename).then(responseData => {
+                    if (responseData.ok) {
+                        responseData.json().then(responseJson => {
+                            this.refreshFileList();
+                            this.setState({
+                                selectedFile: responseJson.data
+                            })
+                        });
+                    }
                 });
-
             }
         });
     }
@@ -215,14 +219,16 @@ class MainPanel extends Component {
     }
 
     render() {
-        console.log("update!");
+
         let folderList = this.state.folders.map(folder => {
             return (
                 <li className="list-group-item d-flex justify-content-between align-items-center"
                     style={{textAlignlign: 'center'}}
                     key={folder.id}>
-                    <a href="#" className="d-flex align-items-center folderItem float-left">
-                        <Octicon className="float-left ml-1 mr-1" icon={FileDirectory}/>
+                    <a href="#" className="d-flex align-items-center folderItem float-left" onClick={() => {
+                        this.changeSelectedFolder(folder.id)
+                    }}>
+                        <FontAwesomeIcon className="float-left ml-1 mr-1" icon={faFolder}/>
                         <span>{folder.name}</span>
                     </a>
                     <button type="button" className="float-right btn btn-danger" aria-label="Close"
@@ -297,7 +303,7 @@ class MainPanel extends Component {
                 <li className="list-group-item d-flex justify-content-between align-items-center"
                     key={file.id}>
                     <a href="#" className="d-flex align-items-center fileItem float-left">
-                        <Octicon className="ml-1 mr-1" icon={File}/>
+                        <FontAwesomeIcon className="float-left ml-1 mr-1" icon={faFile}/>
                         <span>{file.filename}</span>
                     </a>
                     <div className="float-right">
@@ -313,11 +319,9 @@ class MainPanel extends Component {
                         <button type="button" className="btn btn-primary mr-1 ml-1"
                                 onClick={() => {
                                     this.setState({
+                                        selectedFileId: file.id,
                                         selectedFile: file,
                                         showFileShareDialog: true
-                                    }, () => {
-                                        console.log("11:");
-                                        console.log(this.state.selectedFile.open_public_share);
                                     });
                                 }}>
                             <span aria-hidden="true">分 享</span>
@@ -352,6 +356,38 @@ class MainPanel extends Component {
             $('#addFolderModal').modal('show');
         else
             $('#addFolderModal').modal('hide');
+
+        let shareInfo = <span></span>;
+        if (this.state.selectedFile.open_private_share === true) {
+            shareInfo = (
+                <div className="row w-100 pl-4 pr-4 d-flex justify-content-between align-items-center">
+                    <div className="float-left">
+                        {"私密分享地址：" + this.state.selectedFile.private_share_url +
+                        "   密码：" + this.state.selectedFile.private_share_password}
+                    </div>
+                    <div className="float-right">
+                        <QRCode
+                            value={window.location + "s/" + this.state.selectedFile.private_share_url}
+                            size={64} bgColor={'#ffffff'}
+                            fgColor={'#000000'}
+                            level={'L'}/>
+                    </div>
+                </div>);
+        } else if (this.state.selectedFile.open_public_share === true) {
+            shareInfo = (
+                <div className="row w-100 pl-4 pr-4 d-flex justify-content-between align-items-center">
+                    <div className="float-left">
+                        {"公开分享地址：" + this.state.selectedFile.public_share_url}
+                    </div>
+                    <div className="float-right">
+                        <QRCode
+                            value={window.location + "s/" + this.state.selectedFile.public_share_url}
+                            size={64} bgColor={'#ffffff'}
+                            fgColor={'#000000'}
+                            level={'L'}/>
+                    </div>
+                </div>);
+        }
         return (
             <div className="w-100 p-3">
                 <div className='row'>
@@ -484,30 +520,34 @@ class MainPanel extends Component {
                                     </button>
                                 </div>
                                 <div className="modal-body">
-                                    {/*{uploadFileError}*/}
-                                    <div className="row w-100 ml-5 mr-5 align-items-center">
-                                        <p>
-                                            {this.state.selectedFile.open_public_share === true ? "分享地址：" + this.state.selectedFile.public_share_url : this.state.selectedFile.public_share_url}
-                                        </p>
-                                    </div>
-                                    <div className="row w-100 ml-5 mr-5 align-items-center">
+                                    {shareInfo}
+                                    <div className="row w-100  pl-4 pr-4">
                                         <form>
                                             <div className="form-check  form-check-inline">
                                                 <input className="form-check-input" type="radio" name="fileShareRadio"
                                                        id="exampleRadios1" value="option1"
                                                        defaultChecked={this.state.selectedFile.open_public_share}
-                                                       onClick={() => this.publicShareValue = true}/>
+                                                       onClick={() => this.publicShareValue = 2}/>
                                                 <label className="form-check-label">
-                                                    打开
+                                                    公开分享
                                                 </label>
                                             </div>
                                             <div className="form-check  form-check-inline">
                                                 <input className="form-check-input" type="radio" name="fileShareRadio"
                                                        id="exampleRadios2" value="option2"
-                                                       defaultChecked={!this.state.selectedFile.open_public_share}
-                                                       onClick={() => this.publicShareValue = false}/>
+                                                       defaultChecked={this.state.selectedFile.open_private_share}
+                                                       onClick={() => this.publicShareValue = 1}/>
                                                 <label className="form-check-label">
-                                                    关闭
+                                                    私密分享
+                                                </label>
+                                            </div>
+                                            <div className="form-check  form-check-inline">
+                                                <input className="form-check-input" type="radio" name="fileShareRadio"
+                                                       id="exampleRadios3" value="option3"
+                                                       defaultChecked={!this.state.selectedFile.open_public_share && !this.state.selectedFile.open_private_share}
+                                                       onClick={() => this.publicShareValue = 0}/>
+                                                <label className="form-check-label">
+                                                    关闭分享
                                                 </label>
                                             </div>
                                         </form>

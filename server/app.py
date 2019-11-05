@@ -41,6 +41,7 @@ def test_authorization():
         token = args['token']
     else:
         return False
+
     return verify_auth_token(token)
 
 
@@ -78,16 +79,20 @@ def get_random_long_int():
     # return _random.randint(1000000000, 9999999999)
 
 
+def get_random_short_int():
+    return random.SystemRandom().randint(100000, 999999)
+
+
+def generate_password():
+    return base36_encode(get_random_short_int())
+
+
 @app.route('/login', methods=['POST'])
 def login():
     req = request.get_json()
-    # 验证用户名密码
     if req['email'] == app.config['EMAIL'] and req['password'] == app.config['PASSWORD']:
-        # 生成 Token，有效期为一周
         s = URLSafeSerializer(app.config['SECRET_KEY'], expires_in=7 * 24 * 3600)
-
-        return jsonify(message='OK',
-                       token=s.dumps({'key': app.config['SECRET_KEY']}).decode('utf-8'))
+        return jsonify(message='OK', token=s.dumps({'key': app.config['SECRET_KEY']}).decode('utf-8'))
     else:
         return jsonify(message='unauthorized'), 401
 
@@ -99,7 +104,7 @@ def auth():
 
 
 @app.route('/folders', methods=['GET', 'POST'])
-# TODO: @authorization_required
+@authorization_required
 def folders():
     if request.method == 'POST':
         req = request.get_json()
@@ -118,7 +123,7 @@ def folders():
 
 
 @app.route('/folders/<folder_name>', methods=['GET', 'POST', 'DELETE'])
-# TODO: @authorization_required
+@authorization_required
 def folder(folder_name):
     try:
         folder = Folder.get(Folder.name == folder_name)
@@ -141,8 +146,12 @@ def folder(folder_name):
                 return jsonify(message='error'), 409
             try:
                 f.save(target_file)
-                f2 = File.create(folder=folder, filename=f.filename, public_share_url=generate_url(),
-                                 open_public_share=False)
+                f2 = File.create(folder=folder, filename=f.filename,
+                                 public_share_url=generate_url(),
+                                 private_share_url=generate_url(),
+                                 private_share_password=generate_password(),
+                                 open_public_share=False,
+                                 open_private_share=False, )
                 f2.save()
             except Exception as e:
                 app.logger.exception(e)
@@ -157,7 +166,7 @@ def folder(folder_name):
 
 
 @app.route('/folders/<folder_name>/<filename>', methods=['GET', 'DELETE', 'PATCH'])
-# TODO: @authorization_required
+@authorization_required
 def files(folder_name, filename):
     actual_filename = generate_filename(folder_name, filename)
     target_file = os.path.join(os.path.expanduser(app.config['UPLOAD_FOLDER']), actual_filename)
@@ -169,8 +178,13 @@ def files(folder_name, filename):
         share_type = request.args.get('shareType')
         if share_type == 'public':
             f.open_public_share = True
+            f.open_private_share = False
+        elif share_type == 'private':
+            f.open_public_share = False
+            f.open_private_share = True
         elif share_type == 'none':
             f.open_public_share = False
+            f.open_private_share = False
         f.save()
         return jsonify(message='OK')
 
@@ -201,69 +215,69 @@ def files(folder_name, filename):
 @app.route('/share/<path>', methods=['GET'])
 def share(path):
     is_public = False
+    is_private = False
     try:
         f = File.get(File.public_share_url == path)
-        actual_filename = generate_filename(f.folder.name, f.filename)
-        print(actual_filename)
-        target_file = os.path.join(os.path.expanduser(app.config['UPLOAD_FOLDER']), actual_filename)
-        print(target_file)
         is_public = True
     except peewee.DoesNotExist:
-        return jsonify(message='error'), 404
-    if not (is_public and f.open_public_share):
+        try:
+            f = File.get(File.private_share_url == path)
+            is_private = True
+        except peewee.DoesNotExist:
+            return jsonify(message='error'), 404
+
+    actual_filename = generate_filename(f.folder.name, f.filename)
+    target_file = os.path.join(os.path.expanduser(app.config['UPLOAD_FOLDER']), actual_filename)
+
+    if not ((is_public and f.open_public_share) or (is_private and f.open_private_share)):
         return jsonify(message='error'), 404
 
     s = URLSafeSerializer(app.config['SECRET_KEY'], expires_in=24 * 3600)
     args = request.args
-    print("key")
-    print(path)
-    print(args)
-    print(args.get('download'))
     if args.get('download') == 'true':
         # return send_file(target_file, attachment_filename="1111")
         token = None
         cookies = request.cookies
-        print(request.cookies)
-        print("dd1")
         if 'token' in cookies:
             token = cookies['token']
-            print(token)
             try:
-                print(1)
                 data = s.loads(token)
-                print(2)
                 if data['path'] == path:
                     if os.path.exists(target_file):
-                        print("download")
-                        print(target_file)
                         # filename = quote(f.filename)
                         rv = send_file(target_file, as_attachment=True, attachment_filename=f.filename)
                         # if filename != f.filename:  # 支持中文名称
                         #     rv.headers['Content-Disposition'] += "; filename*=utf-8''%s" % (filename)
                         return rv
                     else:
-                        print("download error")
                         return jsonify(message='error'), 404
                 else:
-                    print("path error")
-                    print(data['path'])
                     return jsonify(message='unauthorized'), 401
             except Exception as e:
-                print(e)
-                print("unauthorized error")
                 return jsonify(message='unauthorized'), 401
-        else:
-            print("token error")
 
     token = s.dumps({'path': path}).decode('utf-8')
     payload = {
         'filename': f.filename,
         'folder': f.folder.name,
         'open_public_share': f.open_public_share,
+        'open_private_share': f.open_private_share,
         'token': token,
     }
-    print(token)
+    if is_private:
+        if 'password' not in args or args['password'] != f.private_share_password:
+            payload['token'] = ''
     return jsonify(message='OK', data=payload)
+
+
+@app.route('/s/<path>', methods=['GET'])
+def share_static(path):
+    return app.send_static_file('index.html')
+
+
+@app.route('/', methods=['GET'])
+def index_static():
+    return app.send_static_file('index.html')
 
 
 if __name__ == '__main__':

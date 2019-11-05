@@ -6,12 +6,16 @@ import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.min';
 import 'jquery';
-import 'react-popper'
+import 'react-popper';
+import swal from 'sweetalert';
 import {BrowserRouter as Router, Route} from "react-router-dom";
+
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
+import {faFile} from '@fortawesome/free-solid-svg-icons'
 
 import LoginForm from './component/LoginForm';
 import MainPanel from './component/MainPanel';
-import Octicon, {File} from "@primer/octicons-react";
+
 
 class MainPage extends Component {
     constructor(props) {
@@ -36,9 +40,7 @@ class MainPage extends Component {
     }
 
     onLogin(data) {
-        console.log(data);
         Cookies.set('token', data.token, {expires: 7});
-        console.log(data.token);
         this.setState({
             login: true
         })
@@ -48,7 +50,6 @@ class MainPage extends Component {
         let token = Cookies.get('token');
         if (token) {
             Cookies.set('token', null);
-            console.log("清除成功！");
             window.location.href = "/";
         }
     }
@@ -72,22 +73,44 @@ class SharePage extends Component {
 
     componentDidMount() {
         const path = this.props.match.params.path;
-        console.log(this.props.match);
-        console.log(this.props.match.params);
-        console.log(this.props.match.params.path);
         Api.getFileInfoWithShareUrl(path).then(response => {
-            response.json().then(responseJson => {
-                this.setState({
-                    file: responseJson.data
+            if (response.ok) {
+                response.json().then(responseJson => {
+                    this.setState({
+                        file: responseJson.data
+                    });
+                    if (responseJson.data.open_private_share) {
+                        swal({
+                            text: "请输入密码",
+                            content: {
+                                element: "input",
+                                attributes: {
+                                    placeholder: "输入密码",
+                                    type: "password",
+                                },
+                            },
+                            button: {
+                                text: "确认",
+                                closeModal: false,
+                                closeOnEsc: false,
+                            },
+                            closeOnClickOutside: false,
+                        }).then(password => {
+                            Api.getFileInfoWithShareUrl(path, password).then(response => {
+                                response.json().then(responseJson => {
+                                    if (responseJson.data.token) {
+                                        Cookies.set('token', responseJson.data.token, {expires: 1});
+                                        swal.close();
+                                    } else {
+                                        swal("密码错误！");
+                                    }
+                                });
+                            });
+                        })
+                    }
+                    Cookies.set('token', responseJson.data.token, {expires: 1});
                 });
-                let token = null;
-                token = Cookies.get('token');
-                // if ("null" !== token) {
-                //     return;
-                // }
-                Cookies.set('token', responseJson.data.token, {expires: 1});
-                console.log(Cookies.get('token'));
-            });
+            }
         });
     }
 
@@ -102,27 +125,23 @@ class SharePage extends Component {
             );
         }
         return (
-            <div className="row">
-                <div className="col-2 offset-5">
-                    <table className="table table-borderless w-100">
-                        <tbody>
-                        <tr>
-                            <td rowspan="2"><Octicon className="ml-1 mr-1" icon={File}/></td>
-                            <td>{this.state.file.filename}</td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <button className="btn btn-primary" onClick={() => {
-                                    // window.open(Api.generateShareFileDownloadUrl(this.props.match.params.path), "_blank");
-                                    window.open(Api.generateShareFileDownloadUrl(this.props.match.params.path), '_blank');
-                                }}>
-                                    下 载
-                                </button>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
+            <div className="d-flex justify-content-center align-content-center">
+                <tbody>
+                <tr>
+                    <td rowspan="2"><FontAwesomeIcon icon={faFile} size={"4x"}/></td>
+                    <td>{this.state.file.filename}</td>
+                </tr>
+                <tr>
+                    <td className="d-flex justify-content-center align-content-center">
+                        <button className="btn btn-primary w-75" onClick={() => {
+                            // window.open(Api.generateShareFileDownloadUrl(this.props.match.params.path), "_blank");
+                            window.open(Api.generateShareFileDownloadUrl(this.props.match.params.path), '_blank');
+                        }}>
+                            下 载
+                        </button>
+                    </td>
+                </tr>
+                </tbody>
             </div>
         )
     }
@@ -136,10 +155,10 @@ const App = () => (
                 let token = Cookies.get('token');
                 if (token) {
                     Cookies.set('token', null);
-                    console.log("清除成功！");
                     window.location.href = "/";
                 }
-            }}>清除Cookie
+            }}>手动清除Cookie
+                {/*（分享和登录的cookie）*/}
             </button>
         </nav>
         <Router>

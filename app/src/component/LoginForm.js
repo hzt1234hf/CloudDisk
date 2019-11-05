@@ -16,14 +16,10 @@ class LoginForm extends Component {
         e.preventDefault();
         const email = this.email;
         const password = this.password;
-        console.log("4342423");
         Api.login(email, password).then(response => {
             if (!response.ok) {
                 this.setState({error: true});
                 return;
-            }else{
-                console.log("?????");
-                console.log(response);
             }
             response.json().then(data => this.props.onLogin(data));
         })
