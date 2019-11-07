@@ -1,4 +1,5 @@
 EMAIL = 'test@163.com'
 PASSWORD = 'test'
 SECRET_KEY = "0BNL34329*()2N8V27)UIr@#&g"
+DES_KEY = "ThisIsADESKey456"
 UPLOAD_FOLDER = './upload'

@@ -14,9 +14,19 @@ class Folder(BaseModel):
     name = CharField(max_length=255)
     path = TextField()
     parentid = BigIntegerField()
+    isShared = BooleanField(default=False)
+    isShareEncryped = BooleanField(default=False)
+    sharePassword = CharField(max_length=32, default="")
+    shareUrl = CharField(max_length=128, default="")
+    sharePeriod = DateTimeField()
 
 
 class File(BaseModel):
     id = BigIntegerField(primary_key=True)
     name = CharField(max_length=255)
     folderid = BigIntegerField()
+    isShared = BooleanField(default=False)
+    isShareEncryped = BooleanField(default=False)
+    sharePassword = CharField(max_length=32, default="")
+    shareUrl = CharField(max_length=128, default="")
+    sharePeriod = DateTimeField()

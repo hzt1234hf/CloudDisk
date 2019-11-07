@@ -2,7 +2,11 @@ import React, {Component} from 'react';
 import Api from '../Logic/api'
 import './MainPanel.css';
 import swal from 'sweetalert';
+import $ from 'jquery'
 import Octicon, {File, FileDirectory, Fold, FoldUp, X} from '@primer/octicons-react'
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
+import {faFile, faFolder, faFileDownload, faFileUpload} from '@fortawesome/free-solid-svg-icons'
+import QRCode from 'qrcode.react';
 
 class MainPanel extends Component {
     constructor(props) {
@@ -16,14 +20,19 @@ class MainPanel extends Component {
             showUploadFileDialog: false,
             uploadFileError: false,
 
+            showShareDialog: false,
+            selectedShareObj: '',
+
             curFolder: null,
-            selectedFolderId: 0
+            selectedFolderId: 0,
+            rootFolders: [],
         };
         this.addFolder = this.addFolder.bind(this);
         this.uploadFile = this.uploadFile.bind(this);
     }
 
     refreshFolderAndFileList() {
+        console.log("refresh");
         Api.getFolder(this.state.selectedFolderId).then(response => {
             if (response.ok) {
                 response.json().then(responseJson => {
@@ -32,6 +41,10 @@ class MainPanel extends Component {
                         folders: responseJson.subfolders,
                         files: responseJson.files,
                     });
+                    if (this.state.rootFolders.length === 0)
+                        this.setState({
+                            rootFolders: [responseJson.data]
+                        });
                 });
             }
         });
@@ -89,16 +102,29 @@ class MainPanel extends Component {
         })
     }
 
-    changeSelectedFolder(id) {
-        if (this.state.selectedFolderId === id) {
+    changeToChildSelectedFolder(folder) {
+        if (this.state.selectedFolderId === folder.id) {
             return;
         }
+        this.state.rootFolders.push(folder);
         this.setState({
-            selectedFolderId: id
+            selectedFolderId: folder.id
         }, () => {
             this.refreshFolderAndFileList();
         });
+    }
 
+    changeToParentSelectedFolder(index) {
+        if (this.state.selectedFolderId === this.state.rootFolders[index].id) {
+            return;
+        }
+        while (this.state.rootFolders.length - 1 > index)
+            this.state.rootFolders.pop();
+        this.setState({
+            selectedFolderId: this.state.rootFolders[index].id
+        }, () => {
+            this.refreshFolderAndFileList();
+        });
     }
 
     uploadFile() {
@@ -161,26 +187,27 @@ class MainPanel extends Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        // if (this.state.showAddFolderDialog) {
-        //     $('#addFolderModal').modal('show');
-        // } else {
-        //     $('#addFolderModal').modal('hide');
-        // }
     }
 
     render() {
+        console.log("update");
         let folderInfo;
+        let rootFolderList = this.state.rootFolders.map((folder, index) => {
+            return (
+                <a href="#" className="folderItem ml-1" key={folder.id} onClick={() => {
+                    this.changeToParentSelectedFolder(index);
+                }}>
+                    {folder.name}
+                </a>
+            )
+        });
         if (this.state.curFolder != null) {
             folderInfo = (
                 <div className="row  align-items-center p-2">
-                    <div className="col-4 d-flex  align-items-center">
+                    <div className="col-4 d-flex align-items-center">
                         <div className="">
                             <span className="">当前目录：</span>
-                            <a href="#" className="folderItem " onClick={() => {
-                                this.changeSelectedFolder(this.state.curFolder.id)
-                            }}>
-                                {this.state.curFolder.name}
-                            </a>
+                            {rootFolderList}
                         </div>
                     </div>
                 </div>
@@ -193,16 +220,22 @@ class MainPanel extends Component {
                 <li className="list-group-item  d-flex justify-content-between align-items-center"
                     key={folder.id}>
 
-                    <a href="#" className="folderItem float-left" onClick={() => {
-                        this.changeSelectedFolder(folder.id)
+                    <a href="#" className="d-flex align-items-center folderItem float-left" onClick={() => {
+                        this.changeToChildSelectedFolder(folder)
                     }}>
-                        <Octicon className="ml-1 mr-1" icon={FileDirectory}/>
+                        <FontAwesomeIcon className="float-left ml-1 mr-1" icon={faFolder}/>
                         <span className="ml-1 mr-1">{folder.name}</span>
                     </a>
-                    <button type="button" className="float-right btn btn-danger mr-1 ml-1" aria-label="Close"
-                            onClick={() => this.deleteFolder(folder.name, folder.id)}>
-                        <span aria-hidden="true"><Octicon icon={X}/></span>
-                    </button>
+                    <div className="float-right ">
+                        <button type="button" className="btn btn-danger mr-1 ml-1" aria-label="Close"
+                                onClick={() => this.deleteFolder(folder.name, folder.id)}>
+                            <span aria-hidden="true">删 除</span>
+                        </button>
+                        <button type="button" className="btn btn-primary mr-1 ml-1" aria-label="Close"
+                                onClick={() => this.setState({showShareDialog: true, selectedShareObj: folder})}>
+                            分 享
+                        </button>
+                    </div>
                 </li>
             );
         });
@@ -222,11 +255,12 @@ class MainPanel extends Component {
             return (
                 <li className="list-group-item d-flex justify-content-between align-items-center"
                     key={file.id}>
-                    <a href="#" className="fileItem float-left">
-                        <Octicon className="ml-1 mr-1" icon={File}/>
+                    <a href="#" className="d-flex align-items-center fileItem float-left">
+                        <FontAwesomeIcon className="float-left ml-1 mr-1" icon={faFile}/>
                         {file.name}
                     </a>
                     <div className="float-right ">
+
                         <button type="button" className="btn btn-danger mr-1 ml-1"
                                 onClick={() => this.deleteFile(file.name, file.id)}>
                             <span aria-hidden="true">删 除</span>
@@ -235,8 +269,11 @@ class MainPanel extends Component {
                                 onClick={() => this.downloadFile(file.id)}>
                             <span aria-hidden="true">下 载</span>
                         </button>
+                        <button type="button" className="btn btn-primary mr-1 ml-1"
+                                onClick={() => this.setState({showShareDialog: true, selectedShareObj: file})}>
+                            <span aria-hidden="true">分 享</span>
+                        </button>
                     </div>
-
                 </li>
             );
         });
@@ -245,30 +282,122 @@ class MainPanel extends Component {
         if (this.state.uploadFileError) {
             uploadFileError = (
                 <div className="alert alert-danger alert-dismissible fade show" role="alert">
-                    <strong>上传文件失败！</strong>请确认服务器或网络连接是否运行正常。
+                    <strong>上传文件失败！</strong>请确认是否文件名重复，或服务器运行和网络连接是否正常。
                 </div>
             );
         } else {
             uploadFileError = <span></span>;
         }
+
+        let shareInfo = <span></span>;
+        console.log(this.state.selectedShareObj);
+        if (this.state.selectedShareObj !== null && this.state.selectedShareObj.isShared === true) {
+            if (this.state.selectedShareObj.isShareEncryped === true) {
+                shareInfo = (
+                    <div className="row w-100 pl-4 pr-4 d-flex justify-content-between align-items-center">
+                        <table className="table table-borderless d-flex justify-content-between align-items-center">
+                            <tbody>
+                            <tr>
+                                <td className="text-nowrap p-1 align-middle">链接：</td>
+                                <td colSpan={"3"} className="text-break p-1">
+                                    <a href={window.location + "s/" + this.state.selectedShareObj.shareUrl}>
+                                        {window.location + "s/" + this.state.selectedShareObj.shareUrl}
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr display={"none"}>
+                                <td className="text-nowrap p-1 align-middle">密码：</td>
+                                <td colSpan={"3"} className="text-nowrap p-1">
+                                    <input type="text"
+                                           defaultValue={this.state.selectedShareObj.sharePassword}
+                                           onChange={evt => {
+                                               this.sharedPassword = evt.target.value;
+                                               console.log(this.sharedPassword)
+                                           }}/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className="text-nowrap p-1 align-middle">二维码：</td>
+                                <td className="text-nowrap p-1" colSpan={"3"}>
+                                    <QRCode
+                                        value={window.location + "s/" + this.state.selectedShareObj.shareUrl}
+                                        size={64} bgColor={'#ffffff'}
+                                        fgColor={'#000000'}
+                                        level={'L'}/>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                );
+            } else {
+                shareInfo = (
+                    <div className="row w-100 pl-4 pr-4 d-flex justify-content-between align-items-center">
+                        <table className="table table-borderless d-flex justify-content-between align-items-center">
+                            <tbody>
+                            <tr>
+                                <td className="text-nowrap p-1 align-middle">链接：</td>
+                                <td colSpan={"3"} className="text-break p-1">
+                                    <a href={window.location + "s/" + this.state.selectedShareObj.shareUrl}>
+                                        {window.location + "s/" + this.state.selectedShareObj.shareUrl}
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className="text-nowrap p-1 align-middle">密码：</td>
+                                <td className="text-nowrap p-1"
+                                    colSpan={"3"}>无
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td className="text-nowrap p-1 align-middle">二维码：</td>
+                                <td className="text-nowrap p-1" colSpan={"3"}>
+                                    <QRCode
+                                        value={window.location + "s/" + this.state.selectedShareObj.shareUrl}
+                                        size={64} bgColor={'#ffffff'}
+                                        fgColor={'#000000'}
+                                        level={'L'}/>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                );
+            }
+
+        }
+
+        if (this.state.showAddFolderDialog)
+            $('#addFolderModal').modal('show');
+        else
+            $('#addFolderModal').modal('hide');
+        if (this.state.showUploadFileDialog)
+            $('#addFileModal').modal('show');
+        else
+            $('#addFileModal').modal('hide');
+        if (this.state.showShareDialog)
+            $('#shareModal').modal('show');
+        else
+            $('#shareModal').modal('hide');
         return (
             <div className="container-fluid w-100 p-4 mt-3">
                 <div className='row p-2 justify-content-end'>
                     {/*<div className="align-self-center w-100 p-3">*/}
                     <div className="col-2 ">
-                        <button type="button" className="btn btn-primary w-100 p-2" data-toggle="modal"
-                                data-target="#addFolderModal"
+                        <button type="button"
+                                className="btn btn-primary w-100 p-2 d-flex align-items-center justify-content-around"
                                 onClick={() => this.setState({showAddFolderDialog: true})}>
-                            <Octicon className="ml-1 mr-1" icon={FileDirectory}/>
+                            <FontAwesomeIcon className="float-left ml-1 mr-1" icon={faFolder}/>
                             添加文件夹
                         </button>
                     </div>
                     {/*</div>*/}
                     <div className="col-2 ">
-                        <button type="button" className="btn btn-primary w-100 p-2" data-toggle="modal"
-                                data-target="#addFileModal"
+                        <button type="button"
+                                className="btn btn-primary w-100 p-2 d-flex align-items-center justify-content-around "
                                 onClick={() => this.setState({showUploadFileDialog: true})}>
-                            <Octicon className="ml-1 mr-1" icon={FileDirectory}/>
+                            <FontAwesomeIcon className="float-left ml-1 mr-1" icon={faFolder}/>
                             上传文件
                         </button>
                     </div>
@@ -367,6 +496,76 @@ class MainPanel extends Component {
                                             aria-label="Close"
                                             onClick={() => {
                                                 this.setState({showUploadFileDialog: false})
+                                            }}>返 回
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="modal fade " id="shareModal" tabIndex="-1" role="dialog"
+                         aria-labelledby="addFilerErrorModelLabel" aria-hidden="true">
+                        <div className="modal-dialog modal-dialog-centered" role="document">
+                            <div className="modal-content">
+                                <div className="modal-header">
+                                    <h5 className="modal-title" id="addFileErrorModelLabel">文件分享</h5>
+                                    <button type="button" className="close" data-dismiss="modal" aria-label="Close"
+                                            onClick={() => {
+                                                this.setState({showShareDialog: false})
+                                            }}>
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div className="modal-body ">
+                                    {shareInfo}
+                                    <div className="row w-100  pl-4 pr-4">
+                                        <form>
+                                            <div className="custom-control custom-switch float-left">
+                                                <input type="checkbox" className="custom-control-input"
+                                                       id="customSwitch1" defaultChecked={this.state.selectedShareObj.isShared} onChange={evt =>{
+                                                    this.setShared = evt.target.checked;
+                                                    console.log(this.setShared);
+                                                }}/>
+                                                    <label className="custom-control-label" htmlFor="customSwitch1" >分 享</label>
+                                            </div>
+                                            <div className="custom-control custom-switch float-left">
+                                                <input type="checkbox" className="custom-control-input"
+                                                       id="customSwitch2" defaultChecked={this.state.selectedShareObj.isShareEncryped} onChange={evt =>{
+                                                    this.setPassword = evt.target.checked;
+                                                    console.log(this.setPassword);
+                                                }}/>
+                                                <label className="custom-control-label" htmlFor="customSwitch2">加 密</label>
+                                            </div>
+                                            <div className="form-check  form-check-inline">
+                                                <input className="form-check-input" type="radio" name="fileShareRadio"
+                                                       id="exampleRadios1" value="option1"
+                                                       defaultChecked={this.state.selectedShareObj.isShared}
+                                                       onClick={() => this.setShared = true}/>
+                                                <label className="form-check-label">
+                                                    分享
+                                                </label>
+                                            </div>
+                                            <div className="form-check  form-check-inline">
+                                                <input className="form-check-input" type="radio" name="fileShareRadio"
+                                                       id="exampleRadios2" value="option2"
+                                                       defaultChecked={this.state.selectedShareObj.isShareEncryped}
+                                                       onClick={() => this.setPassword = true}/>
+                                                <label className="form-check-label">
+                                                    密码
+                                                </label>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div className="modal-footer">
+                                    <button type="submit" className="btn btn-primary"
+                                            onClick={() => this.saveFileShareType(this.publicShareValue)}>
+                                        保 存
+                                    </button>
+                                    <button type="button" className="btn btn-primary" data-dismiss="modal"
+                                            aria-label="Close"
+                                            onClick={() => {
+                                                this.setState({showFileShareDialog: false})
                                             }}>返 回
                                     </button>
                                 </div>
