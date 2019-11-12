@@ -1,6 +1,7 @@
 from peewee import *
 
-db = SqliteDatabase('mydb.db', pragmas=(('foreign_keys', 'on'),))
+# db = SqliteDatabase('mydb.db', pragmas=(('foreign_keys', 'on'),))
+db = SqliteDatabase('mydb.db')
 
 
 class BaseModel(Model):
@@ -9,14 +10,23 @@ class BaseModel(Model):
 
 
 class Folder(BaseModel):
-    name = CharField(max_length=64, unique=True)
+    id = BigIntegerField(primary_key=True)
+    name = CharField(max_length=255)
+    path = TextField()
+    parentid = BigIntegerField()
+    isShared = BooleanField(default=False)
+    isShareEncryped = BooleanField(default=False)
+    sharePassword = CharField(max_length=32, default="")
+    shareUrl = CharField(max_length=128, default="")
+    sharePeriod = DateTimeField()
 
 
 class File(BaseModel):
-    folder = ForeignKeyField(Folder, backref='files')
-    filename = CharField()
-    public_share_url = CharField()
-    private_share_url = CharField()
-    private_share_password = CharField()
-    open_public_share = BooleanField()
-    open_private_share = BooleanField()
+    id = BigIntegerField(primary_key=True)
+    name = CharField(max_length=255)
+    parentid = BigIntegerField()
+    isShared = BooleanField(default=False)
+    isShareEncryped = BooleanField(default=False)
+    sharePassword = CharField(max_length=32, default="")
+    shareUrl = CharField(max_length=128, default="")
+    sharePeriod = DateTimeField()
