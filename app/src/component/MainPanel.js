@@ -2,10 +2,11 @@ import React, {Component} from 'react';
 import Api from '../Logic/api'
 import './MainPanel.css';
 import swal from 'sweetalert';
-import $ from 'jquery'
+import $ from 'jquery';
+import {Bootstrap, Alert, Row, Col, Button, BDiv, Form, ListGroup, BA, BSpan, BTd, BTr, Modal} from 'bootstrap-4-react';
 import Octicon, {File, FileDirectory, Fold, FoldUp, X} from '@primer/octicons-react'
-import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
-import {faFile, faFolder, faFileDownload, faFileUpload} from '@fortawesome/free-solid-svg-icons'
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faFile, faFolder, faFileDownload, faFileUpload} from '@fortawesome/free-solid-svg-icons';
 import QRCode from 'qrcode.react';
 
 class MainPanel extends Component {
@@ -23,12 +24,15 @@ class MainPanel extends Component {
             showShareDialog: false,
             selectedShareObj: '',
 
+
             curFolder: null,
-            selectedFolderId: 0,
-            rootFolders: [],
+            selectedFolderId: 0,    // 选中目录ID
+            rootFolders: [],        // 地址列表
         };
         this.addFolder = this.addFolder.bind(this);
         this.uploadFile = this.uploadFile.bind(this);
+
+        this.rootPath = window.location.protocol + '//' + window.location.host;
     }
 
     refreshFolderAndFileList() {
@@ -186,8 +190,6 @@ class MainPanel extends Component {
         this.refreshFolderAndFileList();
     }
 
-    componentDidUpdate(prevProps, prevState, snapshot) {
-    }
 
     render() {
         console.log("update");
@@ -203,117 +205,131 @@ class MainPanel extends Component {
         });
         if (this.state.curFolder != null) {
             folderInfo = (
-                <div className="row  align-items-center p-2">
-                    <div className="col-4 d-flex align-items-center">
+                <Row alignSelf="center" p="2">
+                    <Col col="4" display="flex" alignSelf="center">
                         <div className="">
-                            <span className="">当前目录：</span>
+                            <BSpan className="">当前目录：</BSpan>
                             {rootFolderList}
                         </div>
-                    </div>
-                </div>
+                    </Col>
+                </Row>
             );
         } else {
-            folderInfo = <span></span>
+            folderInfo = <BSpan></BSpan>
         }
         let folderList = this.state.folders.map(folder => {
             return (
-                <li className="list-group-item  d-flex justify-content-between align-items-center"
-                    key={folder.id}>
+                <ListGroup.Item display="flex" justifyContent="between" alignItems="center"
+                                key={folder.id}>
 
-                    <a href="#" className="d-flex align-items-center folderItem float-left" onClick={() => {
+                    <BA href="#" className="folderItem" display="flex" float="left" alignItems="center" onClick={() => {
                         this.changeToChildSelectedFolder(folder)
                     }}>
                         <FontAwesomeIcon className="float-left ml-1 mr-1" icon={faFolder}/>
-                        <span className="ml-1 mr-1">{folder.name}</span>
-                    </a>
-                    <div className="float-right ">
-                        <button type="button" className="btn btn-danger mr-1 ml-1" aria-label="Close"
+                        <BSpan ml="1" mr="1">{folder.name}</BSpan>
+                    </BA>
+                    <BDiv float="right">
+                        <Button danger mr="1" ml="1" aria-label="Close"
                                 onClick={() => this.deleteFolder(folder.name, folder.id)}>
-                            <span aria-hidden="true">删 除</span>
-                        </button>
-                        <button type="button" className="btn btn-primary mr-1 ml-1" aria-label="Close"
-                                onClick={() => this.setState({showShareDialog: true, selectedShareObj: folder})}>
+                            <BSpan aria-hidden="true">删 除</BSpan>
+                        </Button>
+                        <Button primary mr="1" ml="1" data-toggle="modal" data-target="#shareModal"
+                                onClick={() => {
+                                    this.setState({showShareDialog: true, selectedShareObj: folder});
+                                    this.setShared = folder.isShared;
+                                    this.setSharePassword = folder.isShareEncryped;
+                                    $('#sharedModalSwitch1').prop("checked", folder.isShared);
+                                    $('#sharedModalSwitch2').prop("checked", folder.isShareEncryped);
+                                }}>
                             分 享
-                        </button>
-                    </div>
-                </li>
+                        </Button>
+                    </BDiv>
+                </ListGroup.Item>
             );
         });
 
         let addFolderError;
         if (this.state.addFolderError) {
             addFolderError = (
-                <div className="alert alert-danger alert-dismissible fade show" role="alert">
+                <Alert danger className="alert-dismissible fade show" role="alert">
                     <strong>添加文件夹失败！</strong>请确认名称是否无重复。
-                </div>
+                </Alert>
             );
         } else {
-            addFolderError = <span></span>;
+            addFolderError = <BSpan/>;
         }
 
         let fileList = this.state.files.map(file => {
             return (
-                <li className="list-group-item d-flex justify-content-between align-items-center"
-                    key={file.id}>
-                    <a href="#" className="d-flex align-items-center fileItem float-left">
+                <ListGroup.Item display="flex" justifyContent="between" alignItems="center"
+                                key={file.id}>
+                    <BA href="#" display="flex" alignItems="center" float="left" className="fileItem">
                         <FontAwesomeIcon className="float-left ml-1 mr-1" icon={faFile}/>
                         {file.name}
-                    </a>
-                    <div className="float-right ">
+                    </BA>
+                    <BDiv float="right">
 
-                        <button type="button" className="btn btn-danger mr-1 ml-1"
+                        <Button danger mr="1" ml="1"
                                 onClick={() => this.deleteFile(file.name, file.id)}>
-                            <span aria-hidden="true">删 除</span>
-                        </button>
-                        <button type="button" className="btn btn-primary mr-1 ml-1"
+                            <BSpan aria-hidden="true">删 除</BSpan>
+                        </Button>
+                        <Button primary mr="1" ml="1"
                                 onClick={() => this.downloadFile(file.id)}>
-                            <span aria-hidden="true">下 载</span>
-                        </button>
-                        <button type="button" className="btn btn-primary mr-1 ml-1"
-                                onClick={() => this.setState({showShareDialog: true, selectedShareObj: file})}>
-                            <span aria-hidden="true">分 享</span>
-                        </button>
-                    </div>
-                </li>
+                            <BSpan aria-hidden="true">下 载</BSpan>
+                        </Button>
+                        <Button primary mr="1" ml="1" data-toggle="modal" data-target="#shareModal"
+                                onClick={() => {
+                                    this.setState({showShareDialog: true, selectedShareObj: file});
+                                    this.setShared = file.isShared;
+                                    this.setSharePassword = file.isShareEncryped;
+                                    let sharedModalSwitch2 = $('#sharedModalSwitch2');
+                                    $('#sharedModalSwitch1').prop("checked", file.isShared);
+                                    sharedModalSwitch2.prop("checked", file.isShareEncryped);
+                                    if (this.setShared)
+                                        sharedModalSwitch2.removeAttr("disabled");
+                                    else
+                                        sharedModalSwitch2.attr("disabled", "disabled");
+                                }}>
+                            <BSpan aria-hidden="true">分 享</BSpan>
+                        </Button>
+                    </BDiv>
+                </ListGroup.Item>
             );
         });
 
         let uploadFileError;
         if (this.state.uploadFileError) {
             uploadFileError = (
-                <div className="alert alert-danger alert-dismissible fade show" role="alert">
+                <Alert danger className="alert-dismissible fade show" role="alert">
                     <strong>上传文件失败！</strong>请确认是否文件名重复，或服务器运行和网络连接是否正常。
-                </div>
+                </Alert>
             );
         } else {
-            uploadFileError = <span></span>;
+            uploadFileError = <BSpan/>;
         }
 
-        let shareInfo = <span></span>;
-        console.log(this.state.selectedShareObj);
+        let shareInfo = <BSpan/>;
         if (this.state.selectedShareObj !== null && this.state.selectedShareObj.isShared === true) {
             if (this.state.selectedShareObj.isShareEncryped === true) {
                 shareInfo = (
-                    <div className="row w-100 pl-4 pr-4 d-flex justify-content-between align-items-center">
+                    <Row w="100" pl="4" pr="4" display="flext" justifyContent="between" alignItems="center">
                         <table className="table table-borderless d-flex justify-content-between align-items-center">
                             <tbody>
                             <tr>
                                 <td className="text-nowrap p-1 align-middle">链接：</td>
                                 <td colSpan={"3"} className="text-break p-1">
-                                    <a href={window.location + "s/" + this.state.selectedShareObj.shareUrl}>
-                                        {window.location + "s/" + this.state.selectedShareObj.shareUrl}
-                                    </a>
+                                    <BA href={this.rootPath + "/s/" + this.state.selectedShareObj.shareUrl}>
+                                        {this.rootPath + "/s/" + this.state.selectedShareObj.shareUrl}
+                                    </BA>
                                 </td>
                             </tr>
                             <tr display={"none"}>
                                 <td className="text-nowrap p-1 align-middle">密码：</td>
                                 <td colSpan={"3"} className="text-nowrap p-1">
-                                    <input type="text"
-                                           defaultValue={this.state.selectedShareObj.sharePassword}
-                                           onChange={evt => {
-                                               this.sharedPassword = evt.target.value;
-                                               console.log(this.sharedPassword)
-                                           }}/>
+                                    <Form.Input type="text" value={this.state.selectedShareObj.sharePassword}
+                                                onChange={evt => {
+                                                    this.sharedPassword = evt.target.value;
+                                                }}/>
                                 </td>
                             </tr>
                             <tr>
@@ -328,19 +344,19 @@ class MainPanel extends Component {
                             </tr>
                             </tbody>
                         </table>
-                    </div>
+                    </Row>
                 );
             } else {
                 shareInfo = (
-                    <div className="row w-100 pl-4 pr-4 d-flex justify-content-between align-items-center">
+                    <Row w="100" pl="4" pr="4" display="flex" justifyContent="between" alignItems="center">
                         <table className="table table-borderless d-flex justify-content-between align-items-center">
                             <tbody>
                             <tr>
                                 <td className="text-nowrap p-1 align-middle">链接：</td>
                                 <td colSpan={"3"} className="text-break p-1">
-                                    <a href={window.location + "s/" + this.state.selectedShareObj.shareUrl}>
-                                        {window.location + "s/" + this.state.selectedShareObj.shareUrl}
-                                    </a>
+                                    <BA href={this.rootPath + "/s/" + this.state.selectedShareObj.shareUrl}>
+                                        {this.rootPath + "/s/" + this.state.selectedShareObj.shareUrl}
+                                    </BA>
                                 </td>
                             </tr>
                             <tr>
@@ -362,216 +378,216 @@ class MainPanel extends Component {
                             </tr>
                             </tbody>
                         </table>
-                    </div>
+                    </Row>
                 );
             }
-
         }
 
-        if (this.state.showAddFolderDialog)
-            $('#addFolderModal').modal('show');
-        else
-            $('#addFolderModal').modal('hide');
-        if (this.state.showUploadFileDialog)
-            $('#addFileModal').modal('show');
-        else
-            $('#addFileModal').modal('hide');
-        if (this.state.showShareDialog)
-            $('#shareModal').modal('show');
-        else
-            $('#shareModal').modal('hide');
+        // if (this.state.showAddFolderDialog)
+        //     $('#addFolderModal').modal('show');
+        // else
+        //     $('#addFolderModal').modal('hide');
+        // if (this.state.showUploadFileDialog)
+        //     $('#addFileModal').modal('show');
+        // else
+        //     $('#addFileModal').modal('hide');
+        // if (this.state.showShareDialog)
+        //     $('#shareModal').modal('show');
+        // else
+        //     $('#shareModal').modal('hide');
+
         return (
             <div className="container-fluid w-100 p-4 mt-3">
-                <div className='row p-2 justify-content-end'>
+                <Row p="2" justifyContent="end">
                     {/*<div className="align-self-center w-100 p-3">*/}
-                    <div className="col-2 ">
-                        <button type="button"
-                                className="btn btn-primary w-100 p-2 d-flex align-items-center justify-content-around"
+                    <Col col="2">
+                        <Button primary w="100" p="2" display="flex" alignItems="center"
+                                justifyContent="around" data-toggle="modal" data-target="#addFolderModal"
                                 onClick={() => this.setState({showAddFolderDialog: true})}>
                             <FontAwesomeIcon className="float-left ml-1 mr-1" icon={faFolder}/>
                             添加文件夹
-                        </button>
-                    </div>
+                        </Button>
+                    </Col>
                     {/*</div>*/}
-                    <div className="col-2 ">
-                        <button type="button"
-                                className="btn btn-primary w-100 p-2 d-flex align-items-center justify-content-around "
+                    <Col col="2">
+                        <Button primary w="100" p="2" display="flex" alignItems="center"
+                                justifyContent="around" data-toggle="modal" data-target="#addFileModal"
                                 onClick={() => this.setState({showUploadFileDialog: true})}>
                             <FontAwesomeIcon className="float-left ml-1 mr-1" icon={faFolder}/>
                             上传文件
-                        </button>
-                    </div>
-                </div>
+                        </Button>
+                    </Col>
+                </Row>
                 <hr/>
                 {folderInfo}
-                <div className="row p-2">
+                <Row p="2">
                     {/*<div className="align-self-center w-100 p-3">*/}
-                    <div className="col-4">
-                        <ul className="list-group">
+                    <Col col="4">
+                        <ListGroup>
                             {folderList}
-                        </ul>
+                        </ListGroup>
                         {/*</div>*/}
-                    </div>
+                    </Col>
                     {/*<div className="align-self-center w-100 p-3">*/}
-                    <div className="col-7 offset-1">
-                        <ul className="list-group">
+                    <Col col="7" offset="1">
+                        <ListGroup>
                             {fileList}
-                        </ul>
-                    </div>
+                        </ListGroup>
+                    </Col>
                     {/*</div>*/}
-                </div>
+                </Row>
+
                 <div>
-                    <div className="modal fade" id="addFolderModal" tabIndex="-1" role="dialog"
-                         aria-labelledby="addFolderErrorModelLabel" aria-hidden="true">
-                        <div className="modal-dialog modal-dialog-centered" role="document">
-                            <div className="modal-content">
-                                <div className="modal-header">
-                                    <h5 className="modal-title" id="addFolderErrorModelLabel">添加文件夹</h5>
-                                    <button type="button" className="close" data-dismiss="modal" aria-label="Close"
-                                            onClick={() => {
-                                                this.setState({showAddFolderDialog: false})
-                                            }}>
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                </div>
-                                <div className="modal-body">
+                    <Modal id="addFolderModal" fade>
+                        <Modal.Dialog centered>
+                            <Modal.Content>
+                                <Modal.Header>
+                                    <Modal.Title>添加文件夹</Modal.Title>
+                                    <Modal.Close onClick={() => {
+                                        this.setState({showAddFolderDialog: false})
+                                    }}>
+                                        <BSpan aria-hidden="true">&times;</BSpan>
+                                    </Modal.Close>
+                                </Modal.Header>
+                                <Modal.Body>
                                     {addFolderError}
-                                    <div className="row w-100 p-3  align-items-center">
-                                        <div className="col-4 h-100 align-self-center">
+                                    <Row w="100" p="3" alignItems="center">
+                                        <Col col="4" h="100" alignSelf="center">
                                             文件夹名称：
-                                        </div>
-                                        <div className="col-8">
-                                            <input type="text" className="form-control" id="inputFolderName"
-                                                   placeholder="请输入文件夹名称"
-                                                   onChange={evt => this.newFolderName = evt.target.value}/>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="modal-footer">
-                                    <button type="submit" className="btn btn-primary" onClick={() => this.addFolder()}>创
+                                        </Col>
+                                        <Col col="8">
+                                            <Form.Input type="text" className="form-control" id="inputFolderName"
+                                                        placeholder="请输入文件夹名称"
+                                                        onChange={evt => this.newFolderName = evt.target.value}/>
+                                        </Col>
+                                    </Row>
+                                </Modal.Body>
+                                <Modal.Footer>
+                                    <Button type="submit" primary onClick={() => this.addFolder()}>创
                                         建
-                                    </button>
-                                    <button type="button" className="btn btn-primary" data-dismiss="modal"
-                                            aria-label="Close"
+                                    </Button>
+                                    <Button primary data-toggle="modal" data-target="#addFolderModal"
                                             onClick={() => {
                                                 this.setState({showAddFolderDialog: false})
                                             }}>返 回
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                                    </Button>
+                                </Modal.Footer>
+                            </Modal.Content>
+                        </Modal.Dialog>
+                    </Modal>
 
-                    <div className="modal fade" id="addFileModal" tabIndex="-1" role="dialog"
-                         aria-labelledby="addFilerErrorModelLabel" aria-hidden="true">
-                        <div className="modal-dialog modal-dialog-centered" role="document">
-                            <div className="modal-content">
-                                <div className="modal-header">
-                                    <h5 className="modal-title" id="addFileErrorModelLabel">上传文件</h5>
-                                    <button type="button" className="close" data-dismiss="modal" aria-label="Close"
-                                            onClick={() => {
-                                                this.setState({showUploadFileDialog: false})
-                                            }}>
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                </div>
-                                <div className="modal-body">
+                    <Modal id="addFileModal" fade>
+                        <Modal.Dialog centered>
+                            <Modal.Content>
+                                <Modal.Header>
+                                    <Modal.Title>上传文件</Modal.Title>
+                                    <Modal.Close onClick={() => {
+                                        this.setState({showUploadFileDialog: false})
+                                    }}>
+                                        <BSpan aria-hidden="true">&times;</BSpan>
+                                    </Modal.Close>
+                                </Modal.Header>
+                                <Modal.Body>
                                     {uploadFileError}
-                                    <div className="row w-100 p-3  align-items-center">
-                                        <div className="col-4 h-100 align-self-center">
+                                    <Row w="100" p="3" alignItems="center">
+                                        <Col col="4" h="100" alignSelf="center">
                                             文件夹名称：
-                                        </div>
-                                        <div className="col-8">
-                                            <input type="file" className="form-control" id="inputFileName"
-                                                   placeholder="上传文件"
-                                                   onChange={evt => this.newUploadFile = evt.target.files[0]}/>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="modal-footer">
-                                    <button type="submit" className="btn btn-primary" onClick={() => this.uploadFile()}>
+                                        </Col>
+                                        <Col col="8">
+                                            <Form.Input type="file" className="form-control" id="inputFileName"
+                                                        style={{height: "auto"}}
+                                                        placeholder="上传文件"
+                                                        onChange={evt => this.newUploadFile = evt.target.files[0]}/>
+                                        </Col>
+                                    </Row>
+                                </Modal.Body>
+                                <Modal.Footer>
+                                    <Button type="submit" primary onClick={() => this.uploadFile()}>
                                         上 传
-                                    </button>
-                                    <button type="button" className="btn btn-primary" data-dismiss="modal"
-                                            aria-label="Close"
+                                    </Button>
+                                    <Button primary data-toggle="modal" data-target="#addFileModal"
                                             onClick={() => {
                                                 this.setState({showUploadFileDialog: false})
                                             }}>返 回
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                                    </Button>
+                                </Modal.Footer>
+                            </Modal.Content>
+                        </Modal.Dialog>
+                    </Modal>
 
-                    <div className="modal fade " id="shareModal" tabIndex="-1" role="dialog"
-                         aria-labelledby="addFilerErrorModelLabel" aria-hidden="true">
-                        <div className="modal-dialog modal-dialog-centered" role="document">
-                            <div className="modal-content">
-                                <div className="modal-header">
-                                    <h5 className="modal-title" id="addFileErrorModelLabel">文件分享</h5>
-                                    <button type="button" className="close" data-dismiss="modal" aria-label="Close"
-                                            onClick={() => {
-                                                this.setState({showShareDialog: false})
-                                            }}>
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                </div>
-                                <div className="modal-body ">
+                    <Modal id="shareModal" fade>
+                        <Modal.Dialog centered>
+                            <Modal.Content>
+                                <Modal.Header>
+                                    <Modal.Title>{this.state.selectedShareObj.path ? "文件夹分享" : "文件分享"}</Modal.Title>
+                                    <Modal.Close onClick={() => {
+                                        this.setState({showShareDialog: false})
+                                    }}>
+                                        <BSpan aria-hidden="true">&times;</BSpan>
+                                    </Modal.Close>
+                                </Modal.Header>
+                                <Modal.Body>
                                     {shareInfo}
-                                    <div className="row w-100  pl-4 pr-4">
-                                        <form>
-                                            <div className="custom-control custom-switch float-left">
-                                                <input type="checkbox" className="custom-control-input"
-                                                       id="customSwitch1" defaultChecked={this.state.selectedShareObj.isShared} onChange={evt =>{
-                                                    this.setShared = evt.target.checked;
-                                                    console.log(this.setShared);
-                                                }}/>
-                                                    <label className="custom-control-label" htmlFor="customSwitch1" >分 享</label>
-                                            </div>
-                                            <div className="custom-control custom-switch float-left">
-                                                <input type="checkbox" className="custom-control-input"
-                                                       id="customSwitch2" defaultChecked={this.state.selectedShareObj.isShareEncryped} onChange={evt =>{
-                                                    this.setPassword = evt.target.checked;
-                                                    console.log(this.setPassword);
-                                                }}/>
-                                                <label className="custom-control-label" htmlFor="customSwitch2">加 密</label>
-                                            </div>
-                                            <div className="form-check  form-check-inline">
-                                                <input className="form-check-input" type="radio" name="fileShareRadio"
-                                                       id="exampleRadios1" value="option1"
-                                                       defaultChecked={this.state.selectedShareObj.isShared}
-                                                       onClick={() => this.setShared = true}/>
-                                                <label className="form-check-label">
-                                                    分享
-                                                </label>
-                                            </div>
-                                            <div className="form-check  form-check-inline">
-                                                <input className="form-check-input" type="radio" name="fileShareRadio"
-                                                       id="exampleRadios2" value="option2"
-                                                       defaultChecked={this.state.selectedShareObj.isShareEncryped}
-                                                       onClick={() => this.setPassword = true}/>
-                                                <label className="form-check-label">
-                                                    密码
-                                                </label>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                                <div className="modal-footer">
-                                    <button type="submit" className="btn btn-primary"
-                                            onClick={() => this.saveFileShareType(this.publicShareValue)}>
-                                        保 存
-                                    </button>
-                                    <button type="button" className="btn btn-primary" data-dismiss="modal"
-                                            aria-label="Close"
+                                    <Row w="100" pl="4" pr="4">
+                                        <Form display="flex" justifyContent="around" w="100">
+                                            <Form.Check className="custom-control custom-switch ">
+                                                <Form.Checkbox type="checkbox" className="custom-control-input"
+                                                               id="sharedModalSwitch1"
+                                                               onChange={evt => {
+                                                                   this.setShared = evt.target.checked;
+                                                                   let sharedModalSwitch2 = $('#sharedModalSwitch2');
+                                                                   if (evt.target.checked)
+                                                                       sharedModalSwitch2.removeAttr("disabled");
+                                                                   else {
+                                                                       sharedModalSwitch2.attr("disabled", "disabled");
+                                                                       sharedModalSwitch2.prop("checked", false);
+                                                                   }
+                                                               }}/>
+                                                <Form.CheckLabel className="custom-control-label"
+                                                                 htmlFor="sharedModalSwitch1">分
+                                                    享</Form.CheckLabel>
+                                            </Form.Check>
+                                            <Form.Check className="custom-control custom-switch ">
+                                                <Form.Checkbox type="checkbox" className="custom-control-input"
+                                                               id="sharedModalSwitch2"
+                                                               onChange={evt => {
+                                                                   this.setSharePassword = evt.target.checked;
+                                                               }}/>
+                                                <Form.CheckLabel className="custom-control-label"
+                                                                 htmlFor="sharedModalSwitch2">加
+                                                    密</Form.CheckLabel>
+                                            </Form.Check>
+                                        </Form>
+                                    </Row>
+                                </Modal.Body>
+                                <Modal.Footer>
+                                    <Button type="submit" primary
                                             onClick={() => {
-                                                this.setState({showFileShareDialog: false})
+                                                Api.setObjShared(this.state.selectedShareObj, this.setShared, this.setSharePassword).then(response => {
+                                                    if (response.ok) {
+                                                        response.json().then(responseJson => {
+                                                            let shareObj = this.state.selectedShareObj;
+                                                            shareObj.isShared = responseJson.data.isShared;
+                                                            shareObj.isShareEncryped = responseJson.data.isShareEncryped;
+                                                            shareObj.sharePassword = responseJson.data.sharePassword;
+                                                            shareObj.shareUrl = responseJson.data.shareUrl;
+                                                            this.setState({selectedShareObj: shareObj});
+                                                        });
+
+                                                    }
+                                                })
+                                            }}>
+                                        保 存
+                                    </Button>
+                                    <Button primary data-toggle="modal" data-target="#shareModal"
+                                            onClick={() => {
+                                                this.setState({showShareDialog: false});
                                             }}>返 回
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                                    </Button>
+                                </Modal.Footer>
+                            </Modal.Content>
+                        </Modal.Dialog>
+                    </Modal>
                 </div>
             </div>
         );

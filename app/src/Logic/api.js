@@ -79,8 +79,49 @@ const Api = {
     },
     downloadFile(fileid) {
         return this.SERVER_API + '/files/' + fileid;
-    }
-
+    },
+    setObjShared(obj, isShared, isShareEncryped) {
+        if (obj.path)
+            return fetch(this.SERVER_API + '/folders/' + obj.id, {
+                method: 'PATCH',
+                body: JSON.stringify({isShare: isShared, isShareEncryped: isShareEncryped, sharePeriod: 7}),
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+        else
+            return fetch(this.SERVER_API + '/files/' + obj.id, {
+                method: 'PATCH',
+                body: JSON.stringify({isShare: isShared, isShareEncryped: isShareEncryped, sharePeriod: 7}),
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+    },
+    getShareObjInfo(path) {
+        return fetch(this.SERVER_API + "/share/" + path, {
+            method: 'GET',
+            mode: 'cors',
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+    },
+    downloadShareObj(path) {
+        return this.SERVER_API + "/share/" + path + "?download=true";
+    },
+    setShareObjPasswd(path, password) {
+        return fetch(this.SERVER_API + "/share/" + path + "?password=" + password, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+    },
 };
 
 export default Api;

@@ -24,7 +24,7 @@ class Folder(BaseModel):
 class File(BaseModel):
     id = BigIntegerField(primary_key=True)
     name = CharField(max_length=255)
-    folderid = BigIntegerField()
+    parentid = BigIntegerField()
     isShared = BooleanField(default=False)
     isShareEncryped = BooleanField(default=False)
     sharePassword = CharField(max_length=32, default="")

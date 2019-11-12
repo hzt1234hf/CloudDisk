@@ -1,5 +1,6 @@
 import hashlib
 import os
+import random
 import shutil
 import datetime
 import base64
@@ -19,7 +20,7 @@ from DAO import *
 app = Flask(__name__)
 app.config.from_object('config')
 # 允许跨域
-CORS(app)
+CORS(app, supports_credentials=True)
 
 
 def verify_auth_token(token):
@@ -61,6 +62,11 @@ def authorization_required(f):
 
 def generate_path(fid, pfolder, pchild):
     actual_path = pchild
+    if type(fid) == str:
+        try:
+            fid = int(fid)
+        except Exception  as e:
+            return actual_path
     if fid != 0:
         actual_path = pfolder + '/' + pchild
     return actual_path
@@ -72,7 +78,7 @@ def AES_Encrypt(data):
     data = pad(data)
     cipher = AES.new(app.config['DES_KEY'].encode('utf8'), AES.MODE_CBC, vi.encode('utf8'))
     encryptedbytes = cipher.encrypt(data.encode('utf8'))
-    encodestrs = base64.b64encode(encryptedbytes)
+    encodestrs = base64.urlsafe_b64encode(encryptedbytes)
     enctext = encodestrs.decode('utf8')
     return enctext
 
@@ -80,7 +86,7 @@ def AES_Encrypt(data):
 def AES_Decrypt(data):
     vi = '0918273645abcdef'
     data = data.encode('utf8')
-    encodebytes = base64.decodebytes(data)
+    encodebytes = base64.urlsafe_b64decode(data)
     cipher = AES.new(app.config['DES_KEY'].encode('utf8'), AES.MODE_CBC, vi.encode('utf8'))
     text_decrypted = cipher.decrypt(encodebytes)
     unpad = lambda s: s[0:-s[-1]]
@@ -99,28 +105,49 @@ def get_encrypt_url(obj):
         return None
     data += str(obj.id).zfill(64)
     url = AES_Encrypt(data)
-    print(url)
     return url
 
 
 def get_decrypt_url(url):
     data = AES_Decrypt(url)
-    print(data)
     srcdata = data.split(' ')
     if len(srcdata) != 2:
         return None
-    print(srcdata)
     return srcdata
 
 
 def get_file_download_path(file):
-    folderpath = Folder.select(Folder.path).where(Folder.id == file.folderid)
-    actual_path = generate_path(file.folderid, folderpath.path, file.name)
+    folderpath = Folder.get(Folder.id == file.parentid)
+    actual_path = generate_path(file.parentid, folderpath.path, file.name)
     target_file = os.path.join(os.path.expanduser(app.config['UPLOAD_FOLDER']), actual_path)
-    if os.path.exists(actual_path):
+    if os.path.exists(target_file):
         rv = send_file(target_file, as_attachment=True, attachment_filename=file.name)
         return rv
     return None
+
+
+def base36_encode(number):
+    assert number >= 0, 'positive integer required'
+    if number == 0:
+        return '0'
+    base36 = []
+    while number != 0:
+        number, i = divmod(number, 36)
+        base36.append('0123456789abcdefghijklmnopqrstuvwxyz'[i])
+    return ''.join(reversed(base36))
+
+
+def get_random_long_int():
+    return random.SystemRandom().randint(1000000000, 9999999999)
+    # return _random.randint(1000000000, 9999999999)
+
+
+def get_random_short_int():
+    return random.SystemRandom().randint(100000, 999999)
+
+
+def generate_password():
+    return base36_encode(get_random_short_int())
 
 
 @app.route('/login', methods=['POST'])
@@ -166,10 +193,10 @@ def folders():
             f.save()
             return jsonify(message='OK'), 201
         except peewee.IntegrityError as e:
-            return jsonify(message="error"), 409
+            return jsonify(message='error'), 409
         except Exception as e:
             app.logger.exception(e)
-            return jsonify(message="error"), 409
+            return jsonify(message='error'), 409
     if request.method == 'GET':
         query = Folder.select()
         if query.exists():
@@ -187,7 +214,7 @@ def folder(folder_id):
         return jsonify(message='error'), 404
     if request.method == 'GET':
         subfolders = Folder.select().where(Folder.parentid == folder.id)
-        files = File.select().where(File.folderid == folder_id)
+        files = File.select().where(File.parentid == folder_id)
         subfolderList = []
         for subfolder in subfolders:
             if subfolder.id != 0:
@@ -201,7 +228,7 @@ def folder(folder_id):
         try:
             # 递归删除数据库函数
             def recuesiondel(folder_id):
-                files = File.select().where(File.folderid == folder_id)
+                files = File.select().where(File.parentid == folder_id)
                 for file in files:
                     file.delete_instance()
                 subfolders = Folder.select().where(Folder.parentid == folder_id)
@@ -229,14 +256,11 @@ def folder(folder_id):
             #     filepath = folder.path + '/' + file.filename
             filepath = generate_path(folder_id, folder.path, file.filename)
             target_file = os.path.join(os.path.expanduser(app.config['UPLOAD_FOLDER']), filepath)
-            print(folder_id)
-            print(filepath)
-            print(target_file)
             if os.path.exists(target_file):
                 return jsonify(message='error'), 409
             try:
                 file.save(target_file)
-                f = File.create(folder=folder, name=file.filename, folderid=folder_id,
+                f = File.create(folder=folder, name=file.filename, parentid=folder_id, isShared=False,
                                 isShareEncryped=False, sharePassword="", shareUrl="",
                                 sharePeriod=datetime.datetime.now())
                 f.save()
@@ -249,10 +273,15 @@ def folder(folder_id):
         if folder.isShared:
             folder.isShareEncryped = req['isShareEncryped']
             folder.shareUrl = get_encrypt_url(folder)
-            folder.sharePeriod = datetime.datetime.now() + datetime.timedelta(req['sharePeriod']);
+            folder.sharePeriod = datetime.datetime.now() + datetime.timedelta(req['sharePeriod'])
             if folder.isShareEncryped:
-                folder.sharePassword = req['sharePassword']
+                # if 'getShareObjInfo' in req:
+                #     folder.sharePassword = req['sharePassword']
+                # else:
+                #     folder.sharePassword = generate_password()
+                folder.sharePassword = generate_password()
         folder.save()
+        return jsonify(message='OK', data=model_to_dict(folder))
     return jsonify(message='OK')
 
 
@@ -266,11 +295,11 @@ def files(file_id):
     except peewee.DoesNotExist:
         return jsonify(message='error'), 404
     # actual_path = file.name
-    # if file.folderid != 0:
-    #     folderpath = Folder.select(Folder.path).where(Folder.id == file.folderid)
+    # if file.parentid != 0:
+    #     folderpath = Folder.select(Folder.path).where(Folder.id == file.parentid)
     #     actual_path = folderpath + '/' + file.name
-    folderpath = Folder.get(Folder.id == file.folderid)
-    actual_path = generate_path(file.folderid, folderpath.path, file.name)
+    folderpath = Folder.get(Folder.id == file.parentid)
+    actual_path = generate_path(file.parentid, folderpath.path, file.name)
     target_file = os.path.join(os.path.expanduser(app.config['UPLOAD_FOLDER']), actual_path)
     if request.method == 'GET':
         args = request.args
@@ -297,10 +326,17 @@ def files(file_id):
         if file.isShared:
             file.isShareEncryped = req['isShareEncryped']
             file.shareUrl = get_encrypt_url(file)
-            file.sharePeriod = datetime.datetime.now() + datetime.timedelta(req['sharePeriod']);
+            file.sharePeriod = datetime.datetime.now() + datetime.timedelta(req['sharePeriod'])
             if file.isShareEncryped:
-                file.sharePassword = req['sharePassword']
+                # if 'getShareObjInfo' in req:
+                #     file.sharePassword = req['sharePassword']
+                # else:
+                #     file.sharePassword = generate_password()
+                file.sharePassword = generate_password()
+        else:
+            file.isShareEncryped = False
         file.save()
+        return jsonify(message='OK', data=model_to_dict(file))
     return jsonify(message='OK')
 
 
@@ -309,23 +345,48 @@ def share(path):
     res = get_decrypt_url(path)
     args = request.args
     if res:
+        s = URLSafeSerializer(app.config['SECRET_KEY'], expires_in=24 * 3600)
+
         if res[0] == 'fi':
-            print(int(res[1]))
             try:
                 file = File.get_by_id(int(res[1]))
             except peewee.DoesNotExist:
                 return jsonify(message='error'), 404
             if file.isShared:
+                payload = {
+                    'path': path,
+                    'name': file.name,
+                    'isShared': file.isShared,
+                    'needPassword': False,
+                    'isFile': True,
+                    'token': None
+                }
+                cookies = request.cookies
                 if file.isShareEncryped:
-                    if 'download' in args and args['download'] == 'true' and \
-                            'password' in args and args['password'] == file.sharePassword:
-                        rv = get_file_download_path(file)
-                        if rv:
-                            return rv
+                    payload['needPassword'] = True
+                    if 'password' in args:
+                        if args['password'] == file.sharePassword:
+                            token = s.dumps({'path': path}).decode('utf8')
+                            payload['token'] = token
+                            return jsonify(message='ok', data=payload)
                         else:
-                            return jsonify(message='error'), 404
-                    else:
-                        return jsonify(message='error'), 409
+                            return jsonify(message='error', data=payload), 409
+                    elif 'shareToken' in cookies:
+                        try:
+                            token = cookies['shareToken']
+                            data = s.loads(token)
+                            if data['path'] == path:
+                                payload['needPassword'] = False
+                                if 'download' in args and args['download'] == 'true':
+                                    rv = get_file_download_path(file)
+                                    if rv:
+                                        return rv
+                                    else:
+                                        return jsonify(message='error'), 409
+                            else:
+                                return jsonify(message='unauthorized', data=payload), 409
+                        except Exception as e:
+                            return jsonify(message='unauthorized', data=payload), 401
                 else:
                     if 'download' in args and args['download'] == 'true':
                         rv = get_file_download_path(file)
@@ -333,8 +394,7 @@ def share(path):
                             return rv
                         else:
                             return jsonify(message='error'), 404
-                    else:
-                        return jsonify(message='ok', type="file", filename=file.name)
+                return jsonify(message='ok', data=payload)
             else:
                 return jsonify(message='error'), 409
         elif res[0] == 'fo':
