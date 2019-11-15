@@ -25,7 +25,7 @@ class MainPanel extends Component {
 
 
             curFolder: null,
-            selectedFolderId: 0,    // 选中目录ID
+            selectedFolderId: 2,    // 选中目录ID
             rootFolders: [],        // 地址列表
         };
         this.addFolder = this.addFolder.bind(this);
@@ -54,7 +54,7 @@ class MainPanel extends Component {
     }
 
     addFolder(folderName = null) {
-        if (folderName == null)
+        if (folderName === null)
             folderName = this.newFolderName;
         Api.addFolder(folderName, this.state.curFolder.id).then(response => {
             this.setState({
@@ -195,11 +195,14 @@ class MainPanel extends Component {
         let folderInfo;
         let rootFolderList = this.state.rootFolders.map((folder, index) => {
             return (
-                <a href="#" className="folderItem ml-1" key={folder.id} onClick={() => {
-                    this.changeToParentSelectedFolder(index);
-                }}>
+                <span key={folder.id}>
+                        {index === 0 ? '' : '>'}
+                    <a href="#" className="folderItem ml-1" key={folder.id} onClick={() => {
+                        this.changeToParentSelectedFolder(index);
+                    }}>
                     {folder.name}
                 </a>
+                </span>
             )
         });
         if (this.state.curFolder != null) {
@@ -218,7 +221,7 @@ class MainPanel extends Component {
         }
         let folderList = this.state.folders.map(folder => {
             return (
-                <ListGroup.Item display="flex" justifyContent="between" alignItems="center"
+                <ListGroup.Link display="flex" justifyContent="between" alignItems="center"
                                 key={folder.id}>
 
                     <BA href="#" className="folderItem" display="flex" float="left" alignItems="center" onClick={() => {
@@ -237,13 +240,19 @@ class MainPanel extends Component {
                                     this.setState({showShareDialog: true, selectedShareObj: folder});
                                     this.setShared = folder.isShared;
                                     this.setSharePassword = folder.isShareEncryped;
+                                    let sharedModalSwitch2 = $('#sharedModalSwitch2');
                                     $('#sharedModalSwitch1').prop("checked", folder.isShared);
-                                    $('#sharedModalSwitch2').prop("checked", folder.isShareEncryped);
+                                    sharedModalSwitch2.prop("checked", folder.isShareEncryped);
+                                    console.log(this.setShared);
+                                    if (this.setShared)
+                                        sharedModalSwitch2.removeAttr("disabled");
+                                    else
+                                        sharedModalSwitch2.attr("disabled", "disabled");
                                 }}>
                             分 享
                         </Button>
                     </BDiv>
-                </ListGroup.Item>
+                </ListGroup.Link>
             );
         });
 
@@ -260,7 +269,7 @@ class MainPanel extends Component {
 
         let fileList = this.state.files.map(file => {
             return (
-                <ListGroup.Item display="flex" justifyContent="between" alignItems="center"
+                <ListGroup.Link display="flex" justifyContent="between" alignItems="center"
                                 key={file.id}>
                     <BA href="#" display="flex" alignItems="center" float="left" className="fileItem">
                         <FontAwesomeIcon className="float-left ml-1 mr-1" icon={faFile}/>
@@ -284,6 +293,7 @@ class MainPanel extends Component {
                                     let sharedModalSwitch2 = $('#sharedModalSwitch2');
                                     $('#sharedModalSwitch1').prop("checked", file.isShared);
                                     sharedModalSwitch2.prop("checked", file.isShareEncryped);
+                                    console.log(this.setShared);
                                     if (this.setShared)
                                         sharedModalSwitch2.removeAttr("disabled");
                                     else
@@ -292,7 +302,7 @@ class MainPanel extends Component {
                             <BSpan aria-hidden="true">分 享</BSpan>
                         </Button>
                     </BDiv>
-                </ListGroup.Item>
+                </ListGroup.Link>
             );
         });
 
@@ -382,19 +392,6 @@ class MainPanel extends Component {
             }
         }
 
-        // if (this.state.showAddFolderDialog)
-        //     $('#addFolderModal').modal('show');
-        // else
-        //     $('#addFolderModal').modal('hide');
-        // if (this.state.showUploadFileDialog)
-        //     $('#addFileModal').modal('show');
-        // else
-        //     $('#addFileModal').modal('hide');
-        // if (this.state.showShareDialog)
-        //     $('#shareModal').modal('show');
-        // else
-        //     $('#shareModal').modal('hide');
-
         return (
             <div className="container-fluid w-100 p-4 mt-3">
                 <Row p="2" justifyContent="end">
@@ -419,23 +416,25 @@ class MainPanel extends Component {
                 </Row>
                 <hr/>
                 {folderInfo}
+                <hr/>
                 <Row p="2">
-                    {/*<div className="align-self-center w-100 p-3">*/}
                     <Col col="4">
                         <ListGroup>
+                            <ListGroup.Link display="flex" justifyContent="center" alignItems="center">
+                                <BSpan className="font-set">文件夹</BSpan>
+                            </ListGroup.Link>
                             {folderList}
                         </ListGroup>
-                        {/*</div>*/}
                     </Col>
-                    {/*<div className="align-self-center w-100 p-3">*/}
                     <Col col="7" offset="1">
                         <ListGroup>
+                            <ListGroup.Link display="flex" justifyContent="center" alignItems="center">
+                                <BSpan className="font-set">文 件</BSpan>
+                            </ListGroup.Link>
                             {fileList}
                         </ListGroup>
                     </Col>
-                    {/*</div>*/}
                 </Row>
-
                 <div>
                     <Modal id="addFolderModal" fade>
                         <Modal.Dialog centered>

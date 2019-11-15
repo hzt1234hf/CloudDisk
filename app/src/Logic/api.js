@@ -110,12 +110,27 @@ const Api = {
             }
         });
     },
-    downloadShareObj(path) {
-        return this.SERVER_API + "/share/" + path + "?download=true";
+    downloadShareObj(path, password) {
+        return this.SERVER_API + "/share/" + path + "?download=true&password=" + password;
     },
     setShareObjPasswd(path, password) {
         return fetch(this.SERVER_API + "/share/" + path + "?password=" + password, {
             method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+    },
+    getShareFolder(path, folderid) {
+        let interfacePath = this.SERVER_API + "/share/" + path + "?folderid=" + folderid;
+        if (folderid === 1)
+            interfacePath = this.SERVER_API + "/share/" + path + "?rootpath";
+        console.log(interfacePath);
+        return fetch(interfacePath, {
+            method: 'GET',
+            mode: 'cors',
+            credentials: 'include',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'

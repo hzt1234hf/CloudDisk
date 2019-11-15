@@ -6,6 +6,7 @@ LogIn::LogIn(QWidget *parent) :
     ui(new Ui::LogIn)
 {
     ui->setupUi(this);
+    this->setWindowFlags(Qt::FramelessWindowHint);
 }
 
 LogIn::~LogIn()

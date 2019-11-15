@@ -22,13 +22,14 @@ from watchdog.events import *
 from watchdog.utils.dirsnapshot import DirectorySnapshot, DirectorySnapshotDiff
 
 from DAO import *
+from tcp_app import *
 
 app = Flask(__name__)
 app.config.from_object('config')
 # 允许跨域
 CORS(app, supports_credentials=True)
-SecreyKey = os.path.abspath(app.config['SECRET_KEY'])
-DesKey = os.path.abspath(app.config['DES_KEY'])
+SecreyKey = app.config['SECRET_KEY']
+DesKey = app.config['DES_KEY']
 ClouDiskPath = os.path.abspath(app.config['UPLOAD_FOLDER'])
 UpdateInterval = app.config['UPDATE_INTERVAL']
 UpdateMaxInterval = app.config['UPDATE_MAX_INTERVAL']
@@ -131,11 +132,11 @@ def generate_path(fid, pfolder, pchild):
 
 
 def generate_foldername(folderid, foldername):
-    return hashlib.md5(("foldid" + folderid + "foldername" + foldername).encode('utf-8')).hexdigest()
+    return hashlib.md5(("foldid" + str(folderid) + "foldername" + foldername).encode('utf-8')).hexdigest()
 
 
 def generate_filename(folderid, filename):
-    return hashlib.md5(("foldid" + folderid + "filename" + filename).encode('utf-8')).hexdigest()
+    return hashlib.md5(("foldid" + str(folderid) + "filename" + filename).encode('utf-8')).hexdigest()
 
 
 def AES_Encrypt(data):
@@ -169,7 +170,7 @@ def get_encrypt_url(obj):
         data = 'fo '
     else:
         return None
-    data += str(obj.id).zfill(64)
+    data += str(obj.id)
     url = AES_Encrypt(data)
     return url
 
@@ -234,8 +235,8 @@ def generate_password():
 @app.route('/login', methods=['POST'])
 def login():
     req = request.get_json()
-    # 验证用户名密码
-    if req['email'] == app.config['EMAIL'] and req['password'] == app.config['PASSWORD']:
+    user = User.select().where((User.email == req['email']) & (User.password == req['password'])).count()
+    if user:
         # 生成 Token，有效期为一周
         s = URLSafeSerializer(SecreyKey, expires_in=7 * 24 * 3600)
 
@@ -258,7 +259,7 @@ def folders():
         req = request.get_json()
         foldername = req['name']
         parentid = req['parentid']
-        if len(Folder.select().where((Folder.parentid == parentid) & (Folder.name == foldername))):
+        if Folder.select().where((Folder.parentid == parentid) & (Folder.name == foldername)).count():
             return jsonify(message='error'), 409
         folder = Folder.get_by_id(parentid)
         folderpath = generate_path(parentid, folder.path, foldername)
@@ -305,12 +306,8 @@ def folder(folder_id):
     if request.method == 'GET':
         subfolders = Folder.select().where(Folder.parentid == folder.id)
         files = File.select().where(File.parentid == folder_id)
-        subfolderList = []
-        for subfolder in subfolders:
-            if subfolder.id != 0:
-                subfolderList.append(model_to_dict(subfolder))
         return jsonify(message='OK', data=model_to_dict(folder, backrefs=True),
-                       subfolders=subfolderList,
+                       subfolders=[model_to_dict(folder) for folder in subfolders],
                        files=[model_to_dict(file) for file in files])
     elif request.method == 'DELETE':
         folderpath = folder.path
@@ -340,14 +337,12 @@ def folder(folder_id):
             app.logger.exception(e)
             return jsonify(message='error'), 409
     elif request.method == 'POST':
-        print(folder_id)
         file = request.files['file']
         if file:
             filepath = generate_path(folder_id, folder.path, file.filename)
             target_file = os.path.join(os.path.expanduser(ClouDiskPath), filepath)
             if Encrypt_File_Mode:
                 filepath = generate_filename(folder_id, file.filename)
-                print(filepath)
                 target_file = os.path.join(os.path.expanduser(ClouDiskPath), filepath)
             if os.path.exists(target_file):
                 return jsonify(message='error'), 409
@@ -381,13 +376,11 @@ def folder(folder_id):
 @app.route('/files/<file_id>', methods=['GET', 'DELETE', 'PATCH'])
 # TODO: @authorization_required
 def files(file_id):
-    # actual_filename = generate_filename(folder_id, filename)
-
     try:
         file = File.get_by_id(file_id)
     except peewee.DoesNotExist:
         return jsonify(message='error'), 404
-    actual_path = generate_filename(file.parentid, file.filename)
+    actual_path = generate_filename(file.parentid, file.name)
     target_file = os.path.join(os.path.expanduser(ClouDiskPath), actual_path)
     if not Encrypt_File_Mode:
         folderpath = Folder.get(Folder.id == file.parentid)
@@ -438,7 +431,6 @@ def share(path):
     args = request.args
     if res:
         s = URLSafeSerializer(SecreyKey, expires_in=24 * 3600)
-
         if res[0] == 'fi':
             try:
                 file = File.get_by_id(int(res[1]))
@@ -450,6 +442,7 @@ def share(path):
                     'name': file.name,
                     'isShared': file.isShared,
                     'needPassword': False,
+                    'password': None,
                     'isFile': True,
                     'token': None
                 }
@@ -458,9 +451,14 @@ def share(path):
                     payload['needPassword'] = True
                     if 'password' in args:
                         if args['password'] == file.sharePassword:
+                            if 'download' in args and args['download'] == 'true':
+                                rv = get_download_file(file)
+                                if rv:
+                                    return rv
+                                else:
+                                    return jsonify(message='error'), 409
                             token = s.dumps({'path': path}).decode('utf8')
-                            payload['token'] = token
-                            return jsonify(message='ok', data=payload)
+                            return jsonify(message='ok', token=token)
                         else:
                             return jsonify(message='error', data=payload), 409
                     elif 'shareToken' in cookies:
@@ -469,14 +467,7 @@ def share(path):
                             data = s.loads(token)
                             if data['path'] == path:
                                 payload['needPassword'] = False
-                                if 'download' in args and args['download'] == 'true':
-                                    rv = get_download_file(file)
-                                    if rv:
-                                        return rv
-                                    else:
-                                        return jsonify(message='error'), 409
-                            else:
-                                return jsonify(message='unauthorized', data=payload), 409
+                                payload['password'] = file.sharePassword
                         except Exception as e:
                             return jsonify(message='unauthorized', data=payload), 401
                 else:
@@ -490,15 +481,72 @@ def share(path):
             else:
                 return jsonify(message='error'), 409
         elif res[0] == 'fo':
-            print(int(res[1]))
+            try:
+                folder = Folder.get_by_id(int(res[1]))
+            except peewee.DoesNotExist:
+                return jsonify(message='error'), 404
+            if folder.isShared:
+                payload = {
+                    'name': folder.name,
+                    'isShared': folder.isShared,
+                    'needPassword': False,
+                    'password': None,
+                    'isFile': False,
+                    'token': None
+                }
+                cookies = request.cookies
+                if folder.isShareEncryped:
+                    payload['needPassword'] = True
+                    if 'password' in args:
+                        print(1)
+                        if args['password'] == folder.sharePassword:
+                            token = s.dumps({'path': path}).decode('utf8')
+                            return jsonify(message='ok', token=token)
+                        else:
+                            return jsonify(message='error', data=payload), 409
+                    elif 'shareToken' in cookies:
+                        print(2)
+                        try:
+                            token = cookies['shareToken']
+                            data = s.loads(token)
+                            if data['path'] == path:
+                                print(3)
+                                payload['needPassword'] = False
+                                payload['password'] = folder.sharePassword
+                        except Exception as e:
+                            return jsonify(message='unauthorized', data=payload), 401
+                if 'rootpath' in args:
+                    pass
+                elif 'folderid' in args:
+                    print(4)
+                    folder_id = get_decrypt_url(args['folderid'])[1]
+                    folders_model = Folder.select(Folder.id, Folder.name).where(
+                        Folder.parentid == folder_id)
+                    files_model = File.select(File.id, File.name).where(File.parentid == folder_id)
+                    folders = []
+                    files = []
+                    for folder in folders_model:
+                        folders.append({'id': get_encrypt_url(folder), 'name': folder.name})
+                    for file in files_model:
+                        files.append({'id': get_encrypt_url(file), 'name': file.name})
+                    return jsonify(message='ok', data=payload,
+                                   files=files,
+                                   folders=folders)
+
+                return jsonify(message='ok', data=payload,
+                               files=[],
+                               folders=[{'id': get_encrypt_url(folder), 'name': folder.name}])
+            else:
+                return jsonify(message='error'), 409
         else:
             return jsonify(message='error'), 409
     else:
         return jsonify(message='error'), 409
-    return jsonify(message='OK')
 
 
 if __name__ == '__main__':
     # monitor = DirMonitor(ClouDiskPath)
     # monitor.start()
+    t = threading.Thread(target=create_tcp_listen, args=('localhost', 16217))
+    t.start()
     app.run(debug=True, use_reloader=False)

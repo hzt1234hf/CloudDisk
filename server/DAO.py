@@ -9,6 +9,11 @@ class BaseModel(Model):
         database = db
 
 
+class User(BaseModel):
+    email = CharField(max_length=32, primary_key=True)
+    password = CharField(max_length=32)
+
+
 class Folder(BaseModel):
     id = BigIntegerField(primary_key=True)
     name = CharField(max_length=255)
