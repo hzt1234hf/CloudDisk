@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -27,11 +27,13 @@ CONFIG += c++11
 SOURCES += \
         login.cpp \
         main.cpp \
-        clouddiskwindow.cpp
+        clouddiskwindow.cpp \
+        serverconnect.cpp
 
 HEADERS += \
         clouddiskwindow.h \
-        login.h
+        login.h \
+        serverconnect.h
 
 FORMS += \
         clouddiskwindow.ui \

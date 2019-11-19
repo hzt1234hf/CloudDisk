@@ -13,7 +13,7 @@
   <property name="minimumSize">
    <size>
     <width>284</width>
-    <height>200</height>
+    <height>290</height>
    </size>
   </property>
   <property name="maximumSize">
@@ -27,8 +27,8 @@
   </property>
   <property name="styleSheet">
    <string notr="true">QDialog{
-	border:1px solid #79F;
-	border-radius:5px;
+	border:1px solid #333;
+
 }
 QLineEdit{
 	border:1px solid #79F;
@@ -40,6 +40,8 @@ QLineEdit:focus{
 }
 QLineEdit:hover{
 	border:1px solid #4455EE;
+}
+QLineEdit:pressed{
 }
 QPushButton{
 	border:1px solid #79F;
@@ -69,7 +71,7 @@ QPushButton:hover{
     <number>0</number>
    </property>
    <item>
-    <widget class="QLabel" name="label_3">
+    <widget class="QFrame" name="frame">
      <property name="minimumSize">
       <size>
        <width>284</width>
@@ -83,11 +85,46 @@ QPushButton:hover{
       </size>
      </property>
      <property name="styleSheet">
-      <string notr="true">image: url(:/img/img/login_bg.jpg);</string>
+      <string notr="true">QFrame{
+	image: url(:/img/img/login_bg.jpg);
+}
+QPushButton{
+	background-color: rgba(109, 109, 109, 120);
+	color:white;
+}
+QPushButton:hover{
+	background-color: rgba(255,255,255,100);
+}
+</string>
      </property>
-     <property name="text">
-      <string/>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
      </property>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
+     <property name="lineWidth">
+      <number>0</number>
+     </property>
+     <widget class="QPushButton" name="pushButton_2">
+      <property name="geometry">
+       <rect>
+        <x>250</x>
+        <y>10</y>
+        <width>20</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Agency FB</family>
+        <pointsize>-1</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>×</string>
+      </property>
+     </widget>
     </widget>
    </item>
    <item>
@@ -113,6 +150,19 @@ QPushButton:hover{
        <property name="spacing">
         <number>0</number>
        </property>
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>10</width>
+           <height>10</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
          <property name="leftMargin">
@@ -162,6 +212,12 @@ QPushButton:hover{
              <width>200</width>
              <height>30</height>
             </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>宋体</family>
+             <pointsize>10</pointsize>
+            </font>
            </property>
            <property name="maxLength">
             <number>64</number>
@@ -223,6 +279,12 @@ QPushButton:hover{
              <height>30</height>
             </size>
            </property>
+           <property name="font">
+            <font>
+             <family>宋体</family>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
            <property name="maxLength">
             <number>64</number>
            </property>
@@ -264,7 +326,7 @@ QPushButton:hover{
           </spacer>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton">
+          <widget class="QPushButton" name="login">
            <property name="minimumSize">
             <size>
              <width>160</width>
@@ -297,6 +359,19 @@ QPushButton:hover{
          </item>
         </layout>
        </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>10</width>
+           <height>10</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
       </layout>
      </item>
      <item>
@@ -314,21 +389,25 @@ QPushButton:hover{
      </item>
     </layout>
    </item>
-   <item>
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>15</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
   </layout>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>pushButton_2</sender>
+   <signal>clicked()</signal>
+   <receiver>LogIn</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>256</x>
+     <y>24</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>267</x>
+     <y>129</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

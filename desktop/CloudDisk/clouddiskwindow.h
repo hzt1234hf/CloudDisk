@@ -2,6 +2,7 @@
 #define CLOUDDISKWINDOW_H
 
 #include <QMainWindow>
+#include "login.h"
 
 namespace Ui {
 class CloudDiskWindow;

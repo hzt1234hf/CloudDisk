@@ -2,6 +2,13 @@
 #define LOGIN_H
 
 #include <QDialog>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QNetworkAccessManager>
+#include <QJsonObject>
+#include <QJsonDocument>
+
+#include "serverconnect.h"
 
 namespace Ui {
 class LogIn;
@@ -17,6 +24,11 @@ public:
 
 private:
     Ui::LogIn *ui;
+    void (*Response)(QNetworkReply* reply) = nullptr;
+
+private slots:
+    void login();
+    void response(QNetworkReply* reply);
 };
 
 #endif // LOGIN_H

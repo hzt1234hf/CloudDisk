@@ -240,10 +240,25 @@ def login():
         # 生成 Token，有效期为一周
         s = URLSafeSerializer(SecreyKey, expires_in=7 * 24 * 3600)
 
+        # return jsonify(message='OK',
+        #                token=s.dumps({'key': SecreyKey}).decode('utf-8'))
         return jsonify(message='OK',
-                       token=s.dumps({'key': SecreyKey}).decode('utf-8'))
+                       token='gfgerewrfwef')
     else:
         return jsonify(message='unauthorized'), 401
+
+
+@app.route('/test', methods=['GET', 'POST'])
+def test():
+    if request.method == 'POST':
+        req = request.get_json()
+        print(request.get_data())
+        print(req)
+        if req and 'testdata' in req:
+            return jsonify(message='OK', data=req['testdata'])
+    elif request.method == 'GET':
+        print("Get Method")
+    return jsonify(message='OK')
 
 
 @app.route('/auth', methods=['GET'])
