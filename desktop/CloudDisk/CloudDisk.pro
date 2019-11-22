@@ -25,12 +25,22 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+        class_obj/obj_base.cpp \
+        class_obj/obj_file.cpp \
+        class_obj/obj_folder.cpp \
+        class_obj/obj_frame.cpp \
+        class_obj/showpanel.cpp \
         login.cpp \
         main.cpp \
         clouddiskwindow.cpp \
         serverconnect.cpp
 
 HEADERS += \
+        class_obj/obj_base.h \
+        class_obj/obj_file.h \
+        class_obj/obj_folder.h \
+        class_obj/obj_frame.h \
+        class_obj/showpanel.h \
         clouddiskwindow.h \
         login.h \
         serverconnect.h

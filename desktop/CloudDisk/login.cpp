@@ -1,22 +1,14 @@
 #include "login.h"
 #include "ui_login.h"
 
-LogIn::LogIn(QWidget *parent) :
+LogIn::LogIn(QWidget* parent) :
     QDialog(parent),
     ui(new Ui::LogIn)
 {
     ui->setupUi(this);
     this->setWindowFlags(Qt::FramelessWindowHint);
-    Response = [](QNetworkReply* reply){
-        auto data = reply->readAll();
-        auto jsonData = QJsonDocument::fromJson(data).object();
-        qDebug()<<QJsonDocument::fromJson(data);
-        for(auto iter=jsonData.constBegin();iter!=jsonData.constEnd();++iter)
-        {
-            qDebug()<<iter.key()<<"----------------------"<<iter.value();
-        }
-    };
-    connect(ui->login,SIGNAL(clicked()),this,SLOT(login()));
+    connect(ui->login, SIGNAL(clicked()), this, SLOT(login()));
+    connect(ServerConnect::getInstance().getNetwordAccessManager(), SIGNAL(finished(QNetworkReply*)), this, SLOT(response(QNetworkReply*)));
 }
 
 
@@ -24,41 +16,52 @@ LogIn::~LogIn()
 {
     delete ui;
 }
-
 void LogIn::login()
 {
-    QMap<QString,QString> datum;
+    QMap<QString, QString> datum;
     datum["email"] = ui->lineEdit_email->text();
     datum["password"] = ui->lineEdit_password->text();
-//    ServerConnect::getInstance().post("/login",datum,Response);
-//    ServerConnect::getInstance().test();
-
-    QNetworkAccessManager* accessManager = new QNetworkAccessManager();
-    QMetaObject::Connection connection = QObject::connect(accessManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(response(QNetworkReply*)));
-    Q_ASSERT(connection);
-
-
-    QNetworkRequest request;
-    request.setUrl(QUrl("http://localhost:5000/login"));
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
     QJsonObject data;
     QMapIterator<QString, QString> iter(datum);
-    while (iter.hasNext()) {
+    while (iter.hasNext())
+    {
         iter.next();
-        data.insert(iter.key(),iter.value());
+        data.insert(iter.key(), iter.value());
     }
-    QNetworkReply* reply = accessManager->post(request, QJsonDocument(data).toJson());
+    QNetworkReply* reply = ServerConnect::getInstance().http_post("/login", QJsonDocument(data));
+    replyMap.insert(reply, requestType::LOGIN);
 }
 
-void LogIn::response(QNetworkReply *reply)
+
+void LogIn::response(QNetworkReply* reply)
 {
-    auto data = reply->readAll();
-    auto jsonData = QJsonDocument::fromJson(data).object();
-    qDebug()<<QJsonDocument::fromJson(data);
-    for(auto iter=jsonData.constBegin();iter!=jsonData.constEnd();++iter)
+    if(replyMap.contains(reply))
     {
-        qDebug()<<iter.key()<<"----------------------"<<iter.value();
+        switch(replyMap[reply])
+        {
+            case requestType::AUTH:
+                {
+                    auto data = reply->readAll();
+                    qDebug() << data;
+                    replyMap.remove(reply);
+                    reply->deleteLater();
+                }
+                break;
+            case requestType::LOGIN:
+                {
+                    auto data = reply->readAll();
+                    auto jsonData = QJsonDocument::fromJson(data).object();
+                    if (jsonData["message"].toString() == "OK")
+                        accept();
+                    else
+                    {
+                        qDebug() << "unauthorized!";
+                    }
+                    replyMap.remove(reply);
+                    reply->deleteLater();
+                }
+                break;
+        }
     }
-    accept();
 }

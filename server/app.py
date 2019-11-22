@@ -4,6 +4,7 @@ import random
 import shutil
 import datetime
 import base64
+import time
 import threading
 
 from Crypto.Cipher import AES  # 安装依赖pycryptodome，不是Crypto
@@ -250,14 +251,13 @@ def login():
 
 @app.route('/test', methods=['GET', 'POST'])
 def test():
+    time.sleep(1)
     if request.method == 'POST':
         req = request.get_json()
-        print(request.get_data())
-        print(req)
         if req and 'testdata' in req:
             return jsonify(message='OK', data=req['testdata'])
     elif request.method == 'GET':
-        print("Get Method")
+        return jsonify(message='OK')
     return jsonify(message='OK')
 
 

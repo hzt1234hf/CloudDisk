@@ -6,6 +6,7 @@ CloudDiskWindow::CloudDiskWindow(QWidget *parent) :
     ui(new Ui::CloudDiskWindow)
 {
     ui->setupUi(this);
+    connect(ui->action_A,SIGNAL(triggered()),ui->show_panel,SLOT(add()));
 }
 
 CloudDiskWindow::~CloudDiskWindow()

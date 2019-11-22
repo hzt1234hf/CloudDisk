@@ -106,7 +106,7 @@ QPushButton:hover{
      <property name="lineWidth">
       <number>0</number>
      </property>
-     <widget class="QPushButton" name="pushButton_2">
+     <widget class="QPushButton" name="pushButton_close">
       <property name="geometry">
        <rect>
         <x>250</x>
@@ -123,6 +123,9 @@ QPushButton:hover{
       </property>
       <property name="text">
        <string>×</string>
+      </property>
+      <property name="shortcut">
+       <string>Esc</string>
       </property>
      </widget>
     </widget>
@@ -342,6 +345,9 @@ QPushButton:hover{
            <property name="text">
             <string>登  录</string>
            </property>
+           <property name="shortcut">
+            <string>Return</string>
+           </property>
           </widget>
          </item>
          <item>
@@ -391,21 +397,27 @@ QPushButton:hover{
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>lineEdit_email</tabstop>
+  <tabstop>lineEdit_password</tabstop>
+  <tabstop>login</tabstop>
+  <tabstop>pushButton_close</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
-   <sender>pushButton_2</sender>
+   <sender>pushButton_close</sender>
    <signal>clicked()</signal>
    <receiver>LogIn</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>256</x>
-     <y>24</y>
+     <x>255</x>
+     <y>25</y>
     </hint>
     <hint type="destinationlabel">
-     <x>267</x>
-     <y>129</y>
+     <x>204</x>
+     <y>125</y>
     </hint>
    </hints>
   </connection>

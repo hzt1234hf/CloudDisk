@@ -1,7 +1,7 @@
 #include "serverconnect.h"
 
 const QString ServerConnect::address = "http://127.0.0.1:5000";
-ServerConnect * ServerConnect::serverConnect = nullptr;
+ServerConnect* ServerConnect::serverConnect = nullptr;
 QNetworkAccessManager* ServerConnect::accessManager = nullptr;
 
 ServerConnect::ServerConnect()
@@ -15,13 +15,21 @@ ServerConnect::~ServerConnect()
         delete serverConnect;
 }
 
-ServerConnect & ServerConnect::getInstance()
+ServerConnect& ServerConnect::getInstance()
 {
-    if(ServerConnect::serverConnect == nullptr){
+    if(ServerConnect::serverConnect == nullptr)
+    {
         serverConnect = new ServerConnect();
     }
     return *serverConnect;
 }
+
+QNetworkAccessManager* ServerConnect::getNetwordAccessManager()
+{
+    return accessManager;
+}
+
+
 
 void ServerConnect::CreateConnect()
 {
@@ -37,6 +45,7 @@ void ServerConnect::CreateConnect()
 
 void ServerConnect::requestCallback(QNetworkReply* reply)
 {
+    qDebug() << "--------------------------------------------------------------";
     QVariant statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
     if(statusCode.isValid())
         qDebug() << "status code=" << statusCode.toInt();
@@ -46,68 +55,52 @@ void ServerConnect::requestCallback(QNetworkReply* reply)
         qDebug() << "reason=" << reason.toString();
 
     QNetworkReply::NetworkError err = reply->error();
-    if(err != QNetworkReply::NoError) {
+    if(err != QNetworkReply::NoError)
+    {
         qDebug() << "Failed: " << reply->errorString();
     }
-    else {
-        qDebug() << reply->readAll();
-    }
-    if(CallBackFunction != nullptr)
-    {
-        CallBackFunction(reply);
-        CallBackFunction = nullptr;
-    }
+    qDebug() << "--------------------------------------------------------------";
 }
-
-void ServerConnect::test()
+QNetworkReply* ServerConnect::http_get(QString url, QMap<QString, QString> param)
 {
     QNetworkRequest request;
-    request.setUrl(QUrl(ServerConnect::address + "/test"));
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-
-    QJsonObject obj;
-    obj.insert("testdata", "abc");
-    QNetworkReply* reply = accessManager->post(request, QJsonDocument(obj).toJson());
-}
-
-QNetworkReply *ServerConnect::post(QString url, QMap<QString, QString> datum,void (*func)(QNetworkReply*))
-{
-    QNetworkRequest request;
-    request.setUrl(QUrl(ServerConnect::address + url));
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-
-    QJsonObject data;
-    QMapIterator<QString, QString> iter(datum);
-    while (iter.hasNext()) {
-        iter.next();
-        data.insert(iter.key(),iter.value());
-    }
-    CallBackFunction = func;
-    QNetworkReply* reply = accessManager->post(request, QJsonDocument(data).toJson());
-
-}
-
-QNetworkReply *ServerConnect::get(QString url, QMap<QString, QString> datum,void (*func)(QNetworkReply*))
-{
-    QNetworkRequest request;
-
     QString data = "";
-    QMapIterator<QString, QString> iter(datum);
-    while (iter.hasNext()) {
+    QMapIterator<QString, QString> iter(param);
+    while (iter.hasNext())
+    {
         iter.next();
-        qDebug() << iter.key()<<"  "<<iter.value();
         if(data == "")
-            data += iter.key()+'='+iter.value();
+            data += iter.key() + '=' + iter.value();
         else
-            data += '&'+iter.key()+'='+iter.value();
+            data += '&' + iter.key() + '=' + iter.value();
     }
     if(data == "")
         request.setUrl(QUrl(ServerConnect::address + url));
     else
         request.setUrl(QUrl(ServerConnect::address + url + '?' + data));
-    CallBackFunction = func;
     QNetworkReply* reply = accessManager->get(request);
+    return reply;
+}
+QNetworkReply* ServerConnect::http_post(QString url, QJsonDocument jsonData)
+{
+    QNetworkRequest request;
+    request.setUrl(QUrl(ServerConnect::address + url));
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QNetworkReply* reply = accessManager->post(request, jsonData.toJson());
+    return reply;
 }
 
-
-
+QNetworkReply* ServerConnect::http_delete(QString url)
+{
+    QNetworkRequest request;
+    request.setUrl(QUrl(ServerConnect::address + url));
+    QNetworkReply* reply = accessManager->deleteResource(request);
+    return reply;
+}
+QNetworkReply* ServerConnect::http_patch(QString url, QJsonDocument jsonData)
+{
+    QNetworkRequest request;
+    request.setUrl(QUrl(ServerConnect::address + url));
+    QNetworkReply* reply = accessManager->sendCustomRequest(request, QByteArray("PATCH"), jsonData.toJson());
+    return reply;
+}

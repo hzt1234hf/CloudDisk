@@ -4,18 +4,20 @@
 #include "login.h"
 
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
 
-    LogIn login;
     CloudDiskWindow w;
-    login.show();
+    w.show();
+    return a.exec();
+
+    LogIn login;
     if(login.exec() == QDialog::Accepted)
     {
+        CloudDiskWindow w;
         w.show();
+        return a.exec();
     }
-
-
-    return a.exec();
+    return 0;
 }

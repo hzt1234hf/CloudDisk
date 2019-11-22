@@ -6,4 +6,89 @@
         <file>icon/email.png</file>
         <file>icon/password.png</file>
     </qresource>
+    <qresource prefix="/file">
+        <file>icon/file/.....png</file>
+        <file>icon/file/achive.png</file>
+        <file>icon/file/aep.png</file>
+        <file>icon/file/ai.png</file>
+        <file>icon/file/as.png</file>
+        <file>icon/file/audio.png</file>
+        <file>icon/file/avi.png</file>
+        <file>icon/file/bmp.png</file>
+        <file>icon/file/css.png</file>
+        <file>icon/file/csv.png</file>
+        <file>icon/file/dbf.png</file>
+        <file>icon/file/doc.png</file>
+        <file>icon/file/dwg.png</file>
+        <file>icon/file/eps.png</file>
+        <file>icon/file/epub.png</file>
+        <file>icon/file/exe.png</file>
+        <file>icon/file/find.png</file>
+        <file>icon/file/fla.png</file>
+        <file>icon/file/flv.png</file>
+        <file>icon/file/gif.png</file>
+        <file>icon/file/html.png</file>
+        <file>icon/file/image.png</file>
+        <file>icon/file/indd.png</file>
+        <file>icon/file/iso.png</file>
+        <file>icon/file/jpg.png</file>
+        <file>icon/file/js.png</file>
+        <file>icon/file/json.png</file>
+        <file>icon/file/midi.png</file>
+        <file>icon/file/mkv.png</file>
+        <file>icon/file/mov.png</file>
+        <file>icon/file/mp3.png</file>
+        <file>icon/file/mp4.png</file>
+        <file>icon/file/mpg.png</file>
+        <file>icon/file/ogg.png</file>
+        <file>icon/file/otf.png</file>
+        <file>icon/file/pdf.png</file>
+        <file>icon/file/php.png</file>
+        <file>icon/file/png.png</file>
+        <file>icon/file/ppt.png</file>
+        <file>icon/file/psd.png</file>
+        <file>icon/file/rar.png</file>
+        <file>icon/file/rtf.png</file>
+        <file>icon/file/sql.png</file>
+        <file>icon/file/svg.png</file>
+        <file>icon/file/swc.png</file>
+        <file>icon/file/swf.png</file>
+        <file>icon/file/tiff.png</file>
+        <file>icon/file/ttf.png</file>
+        <file>icon/file/txt.png</file>
+        <file>icon/file/video.png</file>
+        <file>icon/file/wma.png</file>
+        <file>icon/file/wmv.png</file>
+        <file>icon/file/wrv.png</file>
+        <file>icon/file/xls.png</file>
+        <file>icon/file/xml.png</file>
+        <file>icon/file/zip.png</file>
+    </qresource>
+    <qresource prefix="/panel">
+        <file>icon/panel/....png</file>
+        <file>icon/panel/delete.png</file>
+        <file>icon/panel/download (1).png</file>
+        <file>icon/panel/download (2).png</file>
+        <file>icon/panel/download (3).png</file>
+        <file>icon/panel/find.png</file>
+        <file>icon/panel/folder (1).png</file>
+        <file>icon/panel/folder (2).png</file>
+        <file>icon/panel/homt.png</file>
+        <file>icon/panel/list.png</file>
+        <file>icon/panel/lock.png</file>
+        <file>icon/panel/refresh (1).png</file>
+        <file>icon/panel/refresh (2).png</file>
+        <file>icon/panel/save.png</file>
+        <file>icon/panel/setting.png</file>
+        <file>icon/panel/share.png</file>
+        <file>icon/panel/star.png</file>
+        <file>icon/panel/switch.png</file>
+        <file>icon/panel/unlock.png</file>
+        <file>icon/panel/upload (1).png</file>
+        <file>icon/panel/upload (2).png</file>
+        <file>icon/panel/upload.png</file>
+        <file>icon/panel/wait.png</file>
+        <file>icon/panel/warning (2).png</file>
+        <file>icon/panel/warning.png</file>
+    </qresource>
 </RCC>
