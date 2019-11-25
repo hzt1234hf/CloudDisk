@@ -18,6 +18,7 @@ public:
 signals:
 
 public slots:
+
 };
 
 #endif // OBJ_FILE_H

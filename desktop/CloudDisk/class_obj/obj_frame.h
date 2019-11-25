@@ -35,7 +35,16 @@ private:
 
 
 public:
-    Obj_Base* obj = nullptr;
+    bool isFile = false;
+    QString objType = "";
+    union
+    {
+        Obj_Base* obj = nullptr;
+        Obj_File* objfile;
+        Obj_Folder* objfolder;
+    };
+
+//    Obj_Base* obj = nullptr;
     QLabel* label = nullptr;
     explicit obj_frame(QWidget* parent = nullptr);
     explicit obj_frame(QWidget* parent,
@@ -48,10 +57,21 @@ public:
     void resetInfo(bool isFile, long id, QString name, long parentid, QDate sharePeriod,
                    QString path = "", bool isShared = false, bool isShareEncryped = false, QString sharePassword = "", QString shareUrl = "");
 
+
+    void setUnselected();
+    void setSelected();
+
+private:
+
+
 protected:
+    void mousePressEvent(QMouseEvent* event);
+    void mouseDoubleClickEvent(QMouseEvent* event);
     void paintEvent(QPaintEvent* painter);
 
 signals:
+    void selected(obj_frame*);
+    void open_obj(int id);
 
 public slots:
 };

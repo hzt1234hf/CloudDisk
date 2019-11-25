@@ -15,6 +15,8 @@ public:
                         bool isShared = false, bool isShareEncryped = false, QString sharePassword = "", QString shareUrl = "");
     void setFolderProperty(long id, QString name, long parentid, QDate sharePeriod, QString path,
                            bool isShared = false, bool isShareEncryped = false, QString sharePassword = "", QString shareUrl = "");
+protected:
+
 signals:
 
 public slots:

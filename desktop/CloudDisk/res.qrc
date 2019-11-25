@@ -90,5 +90,11 @@
         <file>icon/panel/wait.png</file>
         <file>icon/panel/warning (2).png</file>
         <file>icon/panel/warning.png</file>
+        <file>icon/panel/back.png</file>
+        <file>icon/panel/config.png</file>
+        <file>icon/panel/next.png</file>
+        <file>icon/panel/upper.png</file>
+        <file>icon/panel/addfolder.png</file>
+        <file>icon/panel/sync.png</file>
     </qresource>
 </RCC>

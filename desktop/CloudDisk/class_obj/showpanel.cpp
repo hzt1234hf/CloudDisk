@@ -8,7 +8,7 @@ ShowPanel::ShowPanel(QWidget* parent) : QWidget(parent)
                             }");
 
     connect(ServerConnect::getInstance().getNetwordAccessManager(), SIGNAL(finished(QNetworkReply*)), this, SLOT(requestCallback(QNetworkReply*)));
-    GetFolder(2);
+    refresh();
 }
 
 ShowPanel::~ShowPanel()
@@ -23,12 +23,12 @@ ShowPanel::~ShowPanel()
         delete(folders.last());
         folders.pop_back();
     }
-    while(unusedFiles.empty() == false)
+    while(unusedFiles.isEmpty() == false)
     {
         delete(unusedFiles.front());
         unusedFiles.pop_front();
     }
-    while(unusedFolders.empty() == false)
+    while(unusedFolders.isEmpty() == false)
     {
         delete(unusedFolders.front());
         unusedFolders.pop_front();
@@ -39,18 +39,18 @@ void ShowPanel::resetFileVector(int fileCnt)
 {
     if(files.size() < fileCnt)
     {
-        while(files.size() < fileCnt && unusedFiles.empty() == false)
+        while(files.size() < fileCnt && unusedFiles.isEmpty() == false)
         {
             auto file  = unusedFiles.front();
             files.push_back(file);
             unusedFiles.pop_front();
-            file->show();
         }
         while(files.size() < fileCnt)
         {
             auto file = new obj_frame(this);
+            connect(file, SIGNAL(selected(obj_frame*)), this, SLOT(setSelected(obj_frame*)));
+            connect(file, SIGNAL(open_obj(int)), this, SLOT(getFileInfo(int)));
             files.push_back(file);
-            file->show();
         }
     }
     else
@@ -61,7 +61,6 @@ void ShowPanel::resetFileVector(int fileCnt)
             file->hide();
             unusedFiles.push_front(file);
             files.pop_back();
-
         }
     }
 }
@@ -70,18 +69,18 @@ void ShowPanel::resetFolderVector(int folderCnt)
 {
     if(folders.size() < folderCnt)
     {
-        while(folders.size() < folderCnt && unusedFolders.empty() == false)
+        while(folders.size() < folderCnt && unusedFolders.isEmpty() == false)
         {
             auto folder = unusedFolders.front();
             folders.push_back(folder);
-            folders.pop_front();
-            folder->show();
+            unusedFolders.pop_front();
         }
         while(folders.size() < folderCnt)
         {
             auto folder = new obj_frame(this);
+            connect(folder, SIGNAL(selected(obj_frame*)), this, SLOT(setSelected(obj_frame*)));
+            connect(folder, SIGNAL(open_obj(int)), this, SLOT(getFolderInfo(int)));
             folders.push_back(folder);
-            folder->show();
         }
     }
     else
@@ -104,24 +103,25 @@ void ShowPanel::resetObjVector(int fileCnt, int folderCnt)
 
 void ShowPanel::setFileInfo(const QJsonArray& jsonData)
 {
-    add();
-    add();
-    add();
     resetFileVector(jsonData.size());
-
     for(int i = 0; i < jsonData.size(); ++i)
     {
-        qDebug() << jsonData[0]["id"];
-        auto tmpData = jsonData[0].toObject();
+        auto tmpData = jsonData[i].toObject();
         files[i]->resetInfo(true, tmpData["id"].toDouble(), tmpData["name"].toString(), tmpData["parentid"].toDouble(), QDate::fromString(tmpData["sharePeriod"].toString()),
                             tmpData["path"].toString(), tmpData["isShared"].toBool(), tmpData["isShareEncryped"].toBool(), tmpData["shareUrl"].toString() );
-        files[i]->show();
     }
+
 }
 
 void ShowPanel::setFolderInfo(const QJsonArray& jsonData)
 {
     resetFolderVector(jsonData.size());
+    for(int i = 0; i < jsonData.size(); ++i)
+    {
+        auto tmpData = jsonData[i].toObject();
+        folders[i]->resetInfo(false, tmpData["id"].toDouble(), tmpData["name"].toString(), tmpData["parentid"].toDouble(), QDate::fromString(tmpData["sharePeriod"].toString()),
+                              tmpData["path"].toString(), tmpData["isShared"].toBool(), tmpData["isShareEncryped"].toBool(), tmpData["shareUrl"].toString() );
+    }
 }
 
 void ShowPanel::rearrange()
@@ -150,27 +150,45 @@ void ShowPanel::rearrange()
     this->setMinimumHeight((row + 1) * (gap + obj_frame::fheight) + gap);
 }
 
+void ShowPanel::addLastFolder(long id)
+{
+    if(lastFolderId.isEmpty())
+        emit enableBackbtn(true);
+    lastFolderId.push_back(id);
+}
+
+long ShowPanel::getLastFolder()
+{
+
+    auto val = lastFolderId.back();
+    lastFolderId.pop_back();
+    if(lastFolderId.isEmpty())
+        emit enableBackbtn(false);
+    return val;
+}
+
 void ShowPanel::GetFolders()
 {
     QNetworkReply* reply = ServerConnect::getInstance().http_get("/folders");
     replyMap.insert(reply, requestType::GET_FOLDERS);
 }
 
-void ShowPanel::GetFolder(int id)
+QNetworkReply* ShowPanel::GetFolder(long id)
 {
+    resetSelected();
     QNetworkReply* reply = ServerConnect::getInstance().http_get("/folders/" + QString::number(id));
-    replyMap.insert(reply, requestType::GET_FOLDER);
+    return reply;
 }
 
-void ShowPanel::AddFolder(QString name, int parentid)
+void ShowPanel::AddFolder(QString name, long parentid)
 {
     QJsonObject data;
     data.insert("name", name);
-    data.insert("parentid", parentid);
+    data.insert("parentid", (double)parentid);
     QNetworkReply* reply = ServerConnect::getInstance().http_post("/folders", QJsonDocument(data));
     replyMap.insert(reply, requestType::ADD_FOLDER);
 }
-void ShowPanel::DeleteFolder(int id)
+void ShowPanel::DeleteFolder(long id)
 {
     QNetworkReply* reply = ServerConnect::getInstance().http_post("/folders/" + QString::number(id));
     replyMap.insert(reply, requestType::DELETE_FOLDER);
@@ -178,15 +196,22 @@ void ShowPanel::DeleteFolder(int id)
 void ShowPanel::UploadFile()
 {
 }
-void ShowPanel::DeleteFile(int fileid)
+
+QNetworkReply* ShowPanel::GetFile(long id)
+{
+    QNetworkReply* reply = ServerConnect::getInstance().http_get("/files/" + QString::number(id) + "?query=info");
+    return reply;
+}
+
+void ShowPanel::DeleteFile(long fileid)
 {
     QNetworkReply* reply = ServerConnect::getInstance().http_delete("/files/" + QString::number(fileid));
     replyMap.insert(reply, requestType::DELETE_FILE);
 }
-void ShowPanel::DownloadFile(int fileid)
+void ShowPanel::DownloadFile(long fileid)
 {
 }
-void ShowPanel::SetObjShared(bool isFile, int objId, bool isShared, bool isShareEncryped)
+void ShowPanel::SetObjShared(bool isFile, long objId, bool isShared, bool isShareEncryped)
 {
     QJsonObject data;
     data.insert("isShare", isShared);
@@ -217,7 +242,7 @@ void ShowPanel::SetShareObjPasswd(QString path, QString password)
     QNetworkReply* reply = ServerConnect::getInstance().http_get("/share/" + path + "?password=" + password);
     replyMap.insert(reply, requestType::SET_SHARED_OBJ_PASSWORD);
 }
-void ShowPanel::GetShareFolder(QString path, int folderid)
+void ShowPanel::GetShareFolder(QString path, long folderid)
 {
 
 }
@@ -226,12 +251,16 @@ void ShowPanel::add()
     obj_frame* obj;
     if(rand() % 2)
     {
-        obj = new obj_frame(this, true, 1, QString::number(rand() % 100) + ".txt", 2, QDate(2019, 11, 21));
+//        obj = new obj_frame(this, true, 1, QString::number(rand() % 100) + ".txt", 2, QDate(2019, 11, 21));
+        obj  = new obj_frame(this);
+        obj->setInfo(true, 1, QString::number(rand() % 100) + ".txt", 2, QDate(2019, 11, 21));
+        connect(obj, SIGNAL(selected(obj_frame*)), this, SLOT(setSelected(obj_frame*)));
         files.push_back(obj);
     }
     else
     {
         obj = new obj_frame(this, false, 1, QString::number(rand() % 100), 2, QDate(2019, 11, 21), "/ac/");
+        connect(obj, SIGNAL(selected(obj_frame*)), this, SLOT(setSelected(obj_frame*)));
         folders.push_back(obj);
     }
     obj->show();
@@ -251,20 +280,53 @@ void ShowPanel::requestCallback(QNetworkReply* reply)
                     qDebug() << jsonData;
                 }
                 break;
+
             case requestType::GET_FOLDER:
                 {
                     auto data = reply->readAll();
                     auto jsonData = QJsonDocument::fromJson(data);
                     setFileInfo(jsonData["files"].toArray());
-//                    qDebug() << jsonData["subfolders"].toArray().size();
-//                    qDebug() << jsonData["files"].toArray().size();
-////                    resetObjVector(jsonData["files"].toArray().size(), jsonData["subfolders"].toArray().size());
-
+                    setFolderInfo(jsonData["subfolders"].toArray());
 //                    qDebug() << jsonData["subfolders"] << endl << endl;
-//                    qDebug() << jsonData["subfolders"][0] << endl << endl;
-//                    qDebug() << jsonData["subfolders"][0]["id"] << endl << endl;
 //                    qDebug() << jsonData["files"];
                     rearrange();
+
+                    auto curFolder = jsonData["data"].toObject();
+                    addLastFolder(curFolderId);
+                    curFolderId = curFolder["id"].toDouble();
+                    upperFolderId = curFolder["parentid"].toDouble();
+                    if(upperFolderId >= initFolderId)
+                        emit enableUpperbtn(true);
+                    else
+                        emit enableUpperbtn(false);
+                }
+                break;
+            case requestType::GET_FOLDER_REFRESH:
+                {
+                    auto data = reply->readAll();
+                    auto jsonData = QJsonDocument::fromJson(data);
+                    setFileInfo(jsonData["files"].toArray());
+                    setFolderInfo(jsonData["subfolders"].toArray());
+                    rearrange();
+                }
+                break;
+            case requestType::GET_FOLDER_LAST:
+                {
+
+                    auto data = reply->readAll();
+                    auto jsonData = QJsonDocument::fromJson(data);
+                    setFileInfo(jsonData["files"].toArray());
+                    setFolderInfo(jsonData["subfolders"].toArray());
+
+                    rearrange();
+
+                    auto curFolder = jsonData["data"].toObject();
+                    curFolderId = curFolder["id"].toDouble();
+                    upperFolderId = curFolder["parentid"].toDouble();
+                    if(upperFolderId >= initFolderId)
+                        emit enableUpperbtn(true);
+                    else
+                        emit enableUpperbtn(false);
                 }
                 break;
             case requestType::ADD_FOLDER:
@@ -276,6 +338,10 @@ void ShowPanel::requestCallback(QNetworkReply* reply)
 
                 } break;
             case requestType::UPLOAD_FILE:
+                {
+
+                } break;
+            case requestType::GET_FILE:
                 {
 
                 } break;
@@ -307,8 +373,64 @@ void ShowPanel::requestCallback(QNetworkReply* reply)
                 {
 
                 } break;
+            default:
+                {
+                    qDebug() << "???";
+                }
         }
     }
+}
+
+void ShowPanel::setSelected(obj_frame* of)
+{
+    if( singleSelected )
+    {
+        resetSelected();
+    }
+    selectedObj.push_back(of);
+    of->setSelected();
+}
+
+void ShowPanel::resetSelected()
+{
+    while(selectedObj.isEmpty() == false)
+    {
+        selectedObj.front()->setUnselected();
+        selectedObj.pop_front();
+    }
+}
+
+void ShowPanel::refresh()
+{
+    replyMap.insert(GetFolder(curFolderId), requestType::GET_FOLDER_REFRESH);
+}
+
+void ShowPanel::getLastFolderInfo()
+{
+    replyMap.insert(GetFolder(getLastFolder()), requestType::GET_FOLDER_LAST);
+}
+
+void ShowPanel::getUpperFolderInfo()
+{
+    replyMap.insert(GetFolder(upperFolderId), requestType::GET_FOLDER);
+}
+
+void ShowPanel::getFolderInfo(int id)
+{
+    if(id == curFolderId)
+        return;
+    replyMap.insert(GetFolder(id), requestType::GET_FOLDER);
+}
+
+void ShowPanel::getFileInfo(int id)
+{
+    replyMap.insert(GetFile(id), requestType::GET_FILE);
+}
+
+
+void ShowPanel::mousePressEvent(QMouseEvent* event)
+{
+    this->resetSelected();
 }
 
 void ShowPanel::paintEvent(QPaintEvent* event)

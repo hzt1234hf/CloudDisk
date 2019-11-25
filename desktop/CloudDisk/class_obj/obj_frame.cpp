@@ -30,108 +30,63 @@ void obj_frame::setPosition(int x, int y)
 void obj_frame::setInfo(bool isFile, long id, QString name, long parentid, QDate sharePeriod,
                         QString path, bool isShared, bool isShareEncryped, QString sharePassword, QString shareUrl)
 {
+    this->isFile = isFile;
     if(this->obj)
     {
         if(isFile)
-        {
-            static_cast<Obj_File*>(this->obj)->setFileProperty(id, name, parentid, sharePeriod, isShared, isShareEncryped, sharePassword, shareUrl);
-        }
+            this->objfile->setFileProperty(id, name, parentid, sharePeriod, isShared, isShareEncryped, sharePassword, shareUrl);
         else
-        {
-            static_cast<Obj_Folder*>(this->obj)->setFolderProperty(id, name, parentid, sharePeriod, path, isShared, isShareEncryped, sharePassword, shareUrl);
-        }
+            this->objfolder->setFolderProperty(id, name, parentid, sharePeriod, path, isShared, isShareEncryped, sharePassword, shareUrl);
     }
     else
     {
         if(isFile)
-        {
-            this->obj = new Obj_File(this, id, name, parentid, sharePeriod, isShared, isShareEncryped, sharePassword, shareUrl);
-        }
+            this->objfile = new Obj_File(this, id, name, parentid, sharePeriod, isShared, isShareEncryped, sharePassword, shareUrl);
         else
-        {
-            this->obj = new Obj_Folder(this, id, name, parentid, sharePeriod, path, isShared, isShareEncryped, sharePassword, shareUrl);
-        }
+            this->objfolder = new Obj_Folder(this, id, name, parentid, sharePeriod, path, isShared, isShareEncryped, sharePassword, shareUrl);
+
+        this->obj->setObjectName("obj");
+
+        this->obj->setMinimumSize(owidth, oheight);
+        this->obj->setMaximumSize(owidth, oheight);
+
+        this->obj->setGeometry(objx, objy, owidth, oheight);
     }
     if(this->label)
     {
-        this->label->setObjectName(name);
+        this->label->setText(name);
     }
     else
     {
         this->label = new QLabel(name, this);
+        this->label->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        this->label->setFont(QFont("微软雅黑", 9));
+        this->label->setMinimumSize(lwidth, lheight);
+        this->label->setMaximumSize(lwidth, lheight);
+        this->label->setGeometry(labelx, labely, lwidth, lheight);
     }
-    this->label->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-    this->label->setFont(QFont("微软雅黑", 9));
 
-    this->obj->setObjectName("obj");
-
-    this->obj->setMinimumSize(owidth, oheight);
-    this->obj->setMaximumSize(owidth, oheight);
-    this->label->setMinimumSize(lwidth, lheight);
-    this->label->setMaximumSize(lwidth, lheight);
-
-    this->obj->setGeometry(objx, objy, owidth, oheight);
-    this->label->setGeometry(labelx, labely, lwidth, lheight);
 
     QString objName = "";
     if(isFile)
     {
         objName = "file_" + QString::number(id);
-        QString objType = name.section('.', 1, 1);
+        objType = name.section('.', 1, 1);
         QString icon = "....";
         if(objType != "")
         {
             icon = "image";
         }
-        qDebug() << objName << "   " << icon;
-        this->setStyleSheet("\
-                           QWidget#obj{\
-                               image: url(:/file/icon/file/" + icon + ".png);\
-                               padding:" + QString::number(opadding) + "px;\
-                           }\
-                           QWidget#" + objName + "{\
-                               background-color:white;\
-                               padding:" + QString::number(fpadding) + "px;\
-                           }\
-                           QWidget#" + objName + ":hover{\
-                               background-color:#BBDAFF;\
-                           }\
-                           QWidget#" + objName + ":pressed{\
-                               background-color:#57A;\
-                           }\
-                           QWidget#" + objName + ":checked{\
-                               background-color:#571;\
-                           }\
-                           ");
+        this->setObjectName(objName);
     }
     else
     {
         objName = "folder_" + QString::number(id);
-        this->setStyleSheet("\
-                            QWidget#obj{\
-                                image: url(:/panel/icon/panel/folder (1).png);\
-                                padding:" + QString::number(opadding) + "px;\
-                            }\
-                            QWidget#" + objName + "{\
-                                background-color:white;\
-                                padding:" + QString::number(fpadding) + "px;\
-                            }\
-                            QWidget#" + objName + ":hover{\
-                                background-color:#BBDAFF;\
-                            }\
-                            QWidget#" + objName + ":pressed{\
-                                background-color:#57A;\
-                            }\
-                            QWidget#" + objName + ":checked{\
-                                background-color:#571;\
-                            }\
-                            ");
+        this->setObjectName(objName);
     }
-    this->setObjectName(objName);
+    setUnselected();
 
     this->show();
-    this->obj->show();
-    this->label->show();
 }
 
 void obj_frame::resetInfo(bool isFile, long id, QString name, long parentid, QDate sharePeriod,
@@ -140,11 +95,99 @@ void obj_frame::resetInfo(bool isFile, long id, QString name, long parentid, QDa
     setInfo(isFile, id, name, parentid, sharePeriod, path, isShared, isShareEncryped, sharePassword, shareUrl);
 }
 
+void obj_frame::setUnselected()
+{
+    if(isFile)
+    {
+        QString icon = "....";
+        if(objType != "")
+        {
+            icon = "image";
+        }
+        this->setStyleSheet("\
+                           QWidget#obj{\
+                               image: url(:/file/icon/file/" + icon + ".png);\
+                               padding:" + QString::number(opadding) + "px;\
+                           }\
+                           QWidget#" + this->objectName() + "{\
+                               background-color:white;\
+                               padding:" + QString::number(fpadding) + "px;\
+                           }\
+                           QWidget#" + this->objectName() + ":hover{\
+                               background-color:#BBDAFF;\
+                           }\
+                           ");
+    }
+    else
+    {
+        this->setStyleSheet("\
+                            QWidget#obj{\
+                                image: url(:/panel/icon/panel/folder (1).png);\
+                                padding:" + QString::number(opadding) + "px;\
+                            }\
+                            QWidget#" + this->objectName() + "{\
+                                background-color:white;\
+                                padding:" + QString::number(fpadding) + "px;\
+                            }\
+                            QWidget#" + this->objectName() + ":hover{\
+                                background-color:#BBDAFF;\
+                            }\
+                            ");
+    }
+}
 
-void obj_frame::paintEvent(QPaintEvent*)
+void obj_frame::setSelected()
+{
+    qDebug() << "???";
+    if(isFile)
+    {
+        QString icon = "....";
+        if(objType != "")
+        {
+            icon = "image";
+        }
+        this->setStyleSheet("\
+                           QWidget#obj{\
+                               image: url(:/file/icon/file/" + icon + ".png);\
+                               padding:" + QString::number(opadding) + "px;\
+                           }\
+                           QWidget#" + this->objectName() + "{\
+                               background-color:#8AD;\
+                               padding:" + QString::number(fpadding) + "px;\
+                           }\
+                           ");
+    }
+    else
+    {
+        this->setStyleSheet("\
+                            QWidget#obj{\
+                                image: url(:/panel/icon/panel/folder (1).png);\
+                                padding:" + QString::number(opadding) + "px;\
+                            }\
+                            QWidget#" + this->objectName() + "{\
+                                background-color:#8AD;\
+                                padding:" + QString::number(fpadding) + "px;\
+                            }\
+                            ");
+    }
+}
+
+void obj_frame::mousePressEvent(QMouseEvent* event)
+{
+    emit selected(this);
+}
+
+void obj_frame::mouseDoubleClickEvent(QMouseEvent* event)
+{
+    qDebug() << obj->id;
+    emit open_obj(obj->id);
+}
+
+void obj_frame::paintEvent(QPaintEvent* e)
 {
     QStyleOption opt;
     opt.init(this);
     QPainter p(this);
     this->style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
+    QWidget::paintEvent(e);
 }

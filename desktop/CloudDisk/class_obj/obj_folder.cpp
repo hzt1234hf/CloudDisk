@@ -17,3 +17,4 @@ void Obj_Folder::setFolderProperty(long id, QString name, long parentid, QDate s
     setProperty(id, name, parentid, sharePeriod, false, isShared, isShareEncryped, sharePassword, shareUrl);
     this->path = path;
 }
+

@@ -75,25 +75,132 @@
    </property>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonTextUnderIcon</enum>
+   </property>
    <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
-    <bool>false</bool>
+    <bool>true</bool>
    </attribute>
-   <addaction name="action_A"/>
+   <addaction name="action_back"/>
+   <addaction name="action_upper"/>
+   <addaction name="action_refresh"/>
+   <addaction name="separator"/>
+   <addaction name="action_addfolder"/>
+   <addaction name="action_add"/>
+   <addaction name="action_download"/>
+   <addaction name="action_share"/>
+   <addaction name="action_delete"/>
+   <addaction name="action"/>
+   <addaction name="separator"/>
+   <addaction name="action_config"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
-  <action name="action_A">
+  <action name="action_add">
    <property name="icon">
     <iconset resource="res.qrc">
      <normaloff>:/panel/icon/panel/upload (2).png</normaloff>:/panel/icon/panel/upload (2).png</iconset>
    </property>
    <property name="text">
-    <string>添加(&amp;A)</string>
+    <string>上传</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+A</string>
+   <property name="toolTip">
+    <string>上传</string>
+   </property>
+  </action>
+  <action name="action_back">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/panel/icon/panel/back.png</normaloff>:/panel/icon/panel/back.png</iconset>
+   </property>
+   <property name="text">
+    <string>后退</string>
+   </property>
+   <property name="toolTip">
+    <string>后退</string>
+   </property>
+  </action>
+  <action name="action_upper">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/panel/icon/panel/upper.png</normaloff>:/panel/icon/panel/upper.png</iconset>
+   </property>
+   <property name="text">
+    <string>上一级</string>
+   </property>
+  </action>
+  <action name="action_download">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/panel/icon/panel/download (2).png</normaloff>:/panel/icon/panel/download (2).png</iconset>
+   </property>
+   <property name="text">
+    <string>下载</string>
+   </property>
+  </action>
+  <action name="action_config">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/panel/icon/panel/config.png</normaloff>:/panel/icon/panel/config.png</iconset>
+   </property>
+   <property name="text">
+    <string>设置</string>
+   </property>
+  </action>
+  <action name="action_addfolder">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/panel/icon/panel/addfolder.png</normaloff>:/panel/icon/panel/addfolder.png</iconset>
+   </property>
+   <property name="text">
+    <string>新建文件夹</string>
+   </property>
+  </action>
+  <action name="action_delete">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/panel/icon/panel/delete.png</normaloff>:/panel/icon/panel/delete.png</iconset>
+   </property>
+   <property name="text">
+    <string>删除</string>
+   </property>
+  </action>
+  <action name="action_share">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/panel/icon/panel/share.png</normaloff>:/panel/icon/panel/share.png</iconset>
+   </property>
+   <property name="text">
+    <string>分享</string>
+   </property>
+  </action>
+  <action name="action_refresh">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/panel/icon/panel/refresh (2).png</normaloff>:/panel/icon/panel/refresh (2).png</iconset>
+   </property>
+   <property name="text">
+    <string>刷新</string>
+   </property>
+  </action>
+  <action name="action">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/panel/icon/panel/sync.png</normaloff>:/panel/icon/panel/sync.png</iconset>
+   </property>
+   <property name="text">
+    <string>建立同步</string>
+   </property>
+   <property name="toolTip">
+    <string>建立同步</string>
    </property>
   </action>
  </widget>

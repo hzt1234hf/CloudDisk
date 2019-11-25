@@ -29,11 +29,22 @@ private:
     int curCount_MaxRowObj = 0;
 
 
-    enum class requestType {GET_FOLDERS, GET_FOLDER, ADD_FOLDER, DELETE_FOLDER,
-                            UPLOAD_FILE, DELETE_FILE, DOWNLOAD_FILE,
+    enum class requestType {GET_FOLDERS,
+                            GET_FOLDER, GET_FOLDER_REFRESH, GET_FOLDER_LAST,
+                            ADD_FOLDER,
+                            DELETE_FOLDER,
+                            UPLOAD_FILE, GET_FILE, DELETE_FILE, DOWNLOAD_FILE,
                             GET_SHARE_OBJ_INFO, GET_SHARE_FOLDER, SET_OBJ_SHARED, SET_SHARED_OBJ_PASSWORD, DOWNLOAD_SHAREOBJ
                            };
-    QMap<QNetworkReply*, requestType> replyMap;
+    QMap<QNetworkReply*, requestType> replyMap; // 请求映射数组
+
+    const long initFolderId = 2;        // 初始目录ID
+    QVector<long> lastFolderId;         // 上一次目录ID记录
+    long upperFolderId = initFolderId;  // 上一层目录ID
+    long curFolderId = initFolderId;    // 当前目录ID
+
+    bool singleSelected = true;     // 单选模式
+    QVector<obj_frame*> selectedObj;// 选中对象数组
 
 public:
     explicit ShowPanel(QWidget* parent = nullptr);
@@ -41,6 +52,7 @@ public:
 
 
 private:
+
     void resetFileVector(int fileCnt);
     void resetFolderVector(int folderCnt);
     void resetObjVector(int fileCnt, int folderCnt);
@@ -49,26 +61,45 @@ private:
 
     void rearrange();
 
+    void addLastFolder(long );
+    long getLastFolder();
+
+    /** 服务器通信API */
     void GetFolders();
-    void GetFolder(int id);
-    void AddFolder(QString name, int parentid);
-    void DeleteFolder(int id);
+    QNetworkReply* GetFolder(long id);
+    void AddFolder(QString name, long parentid);
+    void DeleteFolder(long id);
     void UploadFile();  //  未编写
-    void DeleteFile(int fileid);
-    void DownloadFile(int fileid);// 未编写
-    void SetObjShared(bool isFile, int objId, bool isShared, bool isShareEncryped);
+    QNetworkReply* GetFile(long id);
+    void DeleteFile(long fileid);
+    void DownloadFile(long fileid);// 未编写
+    void SetObjShared(bool isFile, long objId, bool isShared, bool isShareEncryped);
     void GetShareObjInfo(QString path);
     void DownloadShareObj();// 未编写
     void SetShareObjPasswd(QString path, QString password);
-    void GetShareFolder(QString path, int folderid);// 未编写
+    void GetShareFolder(QString path, long folderid);// 未编写
 
 signals:
+    void enableBackbtn(bool);
+    void enableUpperbtn(bool);
+
 
 public slots:
     void add();
     void requestCallback(QNetworkReply*);
+    void setSelected(obj_frame*);
+    void resetSelected();
+
+
+    /** 服务器通信应用 */
+    void refresh();
+    void getLastFolderInfo();
+    void getUpperFolderInfo();
+    void getFolderInfo(int id);
+    void getFileInfo(int id);
 
 protected:
+    void mousePressEvent(QMouseEvent* event);
     void paintEvent(QPaintEvent* event) override;
 };
 
