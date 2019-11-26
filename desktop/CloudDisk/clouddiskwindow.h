@@ -4,8 +4,9 @@
 #include <QMainWindow>
 #include "login.h"
 
-namespace Ui {
-class CloudDiskWindow;
+namespace Ui
+{
+    class CloudDiskWindow;
 }
 
 class CloudDiskWindow : public QMainWindow
@@ -13,11 +14,14 @@ class CloudDiskWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit CloudDiskWindow(QWidget *parent = nullptr);
+    explicit CloudDiskWindow(QWidget* parent = nullptr);
     ~CloudDiskWindow();
 
 private:
-    Ui::CloudDiskWindow *ui;
+    Ui::CloudDiskWindow* ui;
+
+protected slots:
+    void enableObjBtn(bool);
 };
 
 #endif // CLOUDDISKWINDOW_H

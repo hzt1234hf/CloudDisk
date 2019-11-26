@@ -12,12 +12,18 @@
 #include "obj_frame.h"
 #include "../serverconnect.h"
 
+#include <QKeyEvent>
+#include <QMenu>
+
+
 class ShowPanel : public QWidget
 {
     Q_OBJECT
 
 public:
     static constexpr int gap = 10;
+    QMenu* objToolPalette;
+    QMenu* panelToolPalette;
 
 private:
     QVector<obj_frame*> files;
@@ -44,7 +50,9 @@ private:
     long curFolderId = initFolderId;    // 当前目录ID
 
     bool singleSelected = true;     // 单选模式
-    QVector<obj_frame*> selectedObj;// 选中对象数组
+    QList<obj_frame*> selectedObj;  // 选中对象数组
+
+
 
 public:
     explicit ShowPanel(QWidget* parent = nullptr);
@@ -82,14 +90,15 @@ private:
 signals:
     void enableBackbtn(bool);
     void enableUpperbtn(bool);
-
+    void enableObjbtn(bool);
 
 public slots:
     void add();
     void requestCallback(QNetworkReply*);
-    void setSelected(obj_frame*);
+    void setSelected(Qt::MouseButton, obj_frame*);
     void resetSelected();
-
+    void createObjToolPalette(const QPoint&);
+    void createPanelToolPalette(const QPoint&);
 
     /** 服务器通信应用 */
     void refresh();
@@ -100,6 +109,8 @@ public slots:
 
 protected:
     void mousePressEvent(QMouseEvent* event);
+    void keyReleaseEvent(QKeyEvent* event);
+    void keyPressEvent(QKeyEvent* event);
     void paintEvent(QPaintEvent* event) override;
 };
 

@@ -66,7 +66,6 @@ void obj_frame::setInfo(bool isFile, long id, QString name, long parentid, QDate
         this->label->setGeometry(labelx, labely, lwidth, lheight);
     }
 
-
     QString objName = "";
     if(isFile)
     {
@@ -174,7 +173,16 @@ void obj_frame::setSelected()
 
 void obj_frame::mousePressEvent(QMouseEvent* event)
 {
-    emit selected(this);
+    if(event->button() == Qt::LeftButton)
+    {
+        emit selected(Qt::LeftButton, this);
+        event->accept();
+    }
+    else if(event->button() == Qt::RightButton)
+    {
+        emit selected(Qt::RightButton, this);
+        event->accept();
+    }
 }
 
 void obj_frame::mouseDoubleClickEvent(QMouseEvent* event)

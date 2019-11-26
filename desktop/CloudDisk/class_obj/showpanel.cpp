@@ -3,11 +3,15 @@
 
 ShowPanel::ShowPanel(QWidget* parent) : QWidget(parent)
 {
+    objToolPalette = new QMenu(this);
+    panelToolPalette = new QMenu(this);
+//    objToolPalette->
     this->setStyleSheet("QWidget#show_panel{\
                            background-color: rgb(255, 255, 255);\
                             }");
 
     connect(ServerConnect::getInstance().getNetwordAccessManager(), SIGNAL(finished(QNetworkReply*)), this, SLOT(requestCallback(QNetworkReply*)));
+    connect(this, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(createPanelToolPalette(const QPoint&)));
     refresh();
 }
 
@@ -48,7 +52,9 @@ void ShowPanel::resetFileVector(int fileCnt)
         while(files.size() < fileCnt)
         {
             auto file = new obj_frame(this);
-            connect(file, SIGNAL(selected(obj_frame*)), this, SLOT(setSelected(obj_frame*)));
+            file->setContextMenuPolicy(Qt::CustomContextMenu);
+            connect(file, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(createObjToolPalette(const QPoint&)));
+            connect(file, SIGNAL(selected(Qt::MouseButton, obj_frame*)), this, SLOT(setSelected(Qt::MouseButton, obj_frame*)));
             connect(file, SIGNAL(open_obj(int)), this, SLOT(getFileInfo(int)));
             files.push_back(file);
         }
@@ -78,7 +84,9 @@ void ShowPanel::resetFolderVector(int folderCnt)
         while(folders.size() < folderCnt)
         {
             auto folder = new obj_frame(this);
-            connect(folder, SIGNAL(selected(obj_frame*)), this, SLOT(setSelected(obj_frame*)));
+            folder->setContextMenuPolicy(Qt::CustomContextMenu);
+            connect(folder, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(createObjToolPalette(const QPoint&)));
+            connect(folder, SIGNAL(selected(Qt::MouseButton, obj_frame*)), this, SLOT(setSelected(Qt::MouseButton, obj_frame*)));
             connect(folder, SIGNAL(open_obj(int)), this, SLOT(getFolderInfo(int)));
             folders.push_back(folder);
         }
@@ -381,14 +389,35 @@ void ShowPanel::requestCallback(QNetworkReply* reply)
     }
 }
 
-void ShowPanel::setSelected(obj_frame* of)
+void ShowPanel::setSelected(Qt::MouseButton info, obj_frame* of)
 {
-    if( singleSelected )
+    if(info == Qt::LeftButton)
     {
-        resetSelected();
+        if( singleSelected )
+        {
+            resetSelected();
+        }
+        else
+        {
+            if(selectedObj.removeOne(of))
+            {
+                of->setUnselected();
+                return;
+            }
+        }
+        selectedObj.push_back(of);
+        of->setSelected();
     }
-    selectedObj.push_back(of);
-    of->setSelected();
+    else if(info == Qt::RightButton)
+    {
+        if(selectedObj.contains(of) == false)
+        {
+            resetSelected();
+            selectedObj.push_back(of);
+            of->setSelected();
+        }
+    }
+    emit enableObjbtn(true);
 }
 
 void ShowPanel::resetSelected()
@@ -398,6 +427,20 @@ void ShowPanel::resetSelected()
         selectedObj.front()->setUnselected();
         selectedObj.pop_front();
     }
+    emit enableObjbtn(false);
+}
+
+
+void ShowPanel::createObjToolPalette(const QPoint&)
+{
+    qDebug() << "obj";
+    objToolPalette->exec(QCursor::pos());
+}
+
+void ShowPanel::createPanelToolPalette(const QPoint&)
+{
+    qDebug() << "panel";
+    panelToolPalette->exec(QCursor::pos());
 }
 
 void ShowPanel::refresh()
@@ -430,7 +473,29 @@ void ShowPanel::getFileInfo(int id)
 
 void ShowPanel::mousePressEvent(QMouseEvent* event)
 {
+//    if(event->button() == Qt::LeftButton)
     this->resetSelected();
+}
+
+void ShowPanel::keyReleaseEvent(QKeyEvent* event)
+{
+    qDebug() << "release";
+    qDebug() << (Qt::Key)event->key();
+    if(event->key() == Qt::Key_Control)
+        singleSelected = true;
+}
+
+void ShowPanel::keyPressEvent(QKeyEvent* event)
+{
+    if(event->modifiers() == Qt::ControlModifier)
+    {
+        qDebug() << "set false";
+        singleSelected = false;
+    }
+    else
+    {
+
+    }
 }
 
 void ShowPanel::paintEvent(QPaintEvent* event)

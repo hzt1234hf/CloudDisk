@@ -5,6 +5,7 @@
 #include <QLabel>
 #include "obj_file.h"
 #include "obj_folder.h"
+#include <QMouseEvent>
 
 
 class obj_frame : public QWidget
@@ -70,7 +71,7 @@ protected:
     void paintEvent(QPaintEvent* painter);
 
 signals:
-    void selected(obj_frame*);
+    void selected(Qt::MouseButton, obj_frame*);
     void open_obj(int id);
 
 public slots:

@@ -15,7 +15,7 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
+    <item row="1" column="0">
      <widget class="QScrollArea" name="scrollArea">
       <property name="verticalScrollBarPolicy">
        <enum>Qt::ScrollBarAlwaysOn</enum>
@@ -56,10 +56,87 @@
             <height>1000</height>
            </size>
           </property>
+          <property name="focusPolicy">
+           <enum>Qt::StrongFocus</enum>
+          </property>
+          <property name="contextMenuPolicy">
+           <enum>Qt::CustomContextMenu</enum>
+          </property>
          </widget>
         </item>
        </layout>
       </widget>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QWidget" name="address" native="true">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>30</height>
+       </size>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QWidget" name="widget" native="true">
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>4</number>
+          </property>
+          <property name="topMargin">
+           <number>4</number>
+          </property>
+          <property name="rightMargin">
+           <number>4</number>
+          </property>
+          <property name="bottomMargin">
+           <number>4</number>
+          </property>
+          <item>
+           <widget class="QPushButton" name="pushButton">
+            <property name="text">
+             <string>PushButton</string>
+            </property>
+            <property name="flat">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>925</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
      </widget>
     </item>
    </layout>
@@ -82,23 +159,23 @@
     <enum>TopToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
-    <bool>true</bool>
+    <bool>false</bool>
    </attribute>
    <addaction name="action_back"/>
    <addaction name="action_upper"/>
    <addaction name="action_refresh"/>
    <addaction name="separator"/>
    <addaction name="action_addfolder"/>
-   <addaction name="action_add"/>
+   <addaction name="action_upload"/>
    <addaction name="action_download"/>
    <addaction name="action_share"/>
    <addaction name="action_delete"/>
-   <addaction name="action"/>
+   <addaction name="action_sync"/>
    <addaction name="separator"/>
    <addaction name="action_config"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
-  <action name="action_add">
+  <action name="action_upload">
    <property name="icon">
     <iconset resource="res.qrc">
      <normaloff>:/panel/icon/panel/upload (2).png</normaloff>:/panel/icon/panel/upload (2).png</iconset>
@@ -138,6 +215,9 @@
    </property>
   </action>
   <action name="action_download">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="res.qrc">
      <normaloff>:/panel/icon/panel/download (2).png</normaloff>:/panel/icon/panel/download (2).png</iconset>
@@ -165,6 +245,9 @@
    </property>
   </action>
   <action name="action_delete">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="res.qrc">
      <normaloff>:/panel/icon/panel/delete.png</normaloff>:/panel/icon/panel/delete.png</iconset>
@@ -174,6 +257,9 @@
    </property>
   </action>
   <action name="action_share">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="res.qrc">
      <normaloff>:/panel/icon/panel/share.png</normaloff>:/panel/icon/panel/share.png</iconset>
@@ -191,7 +277,10 @@
     <string>刷新</string>
    </property>
   </action>
-  <action name="action">
+  <action name="action_sync">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="res.qrc">
      <normaloff>:/panel/icon/panel/sync.png</normaloff>:/panel/icon/panel/sync.png</iconset>
@@ -201,6 +290,11 @@
    </property>
    <property name="toolTip">
     <string>建立同步</string>
+   </property>
+  </action>
+  <action name="actiontest">
+   <property name="text">
+    <string>test</string>
    </property>
   </action>
  </widget>
