@@ -12,7 +12,7 @@ ShowPanel::ShowPanel(QWidget* parent) : QWidget(parent)
 
     connect(ServerConnect::getInstance().getNetwordAccessManager(), SIGNAL(finished(QNetworkReply*)), this, SLOT(requestCallback(QNetworkReply*)));
     connect(this, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(createPanelToolPalette(const QPoint&)));
-    refresh();
+    refreshCurFolderInfo();
 }
 
 ShowPanel::~ShowPanel()
@@ -198,7 +198,7 @@ void ShowPanel::AddFolder(QString name, long parentid)
 }
 void ShowPanel::DeleteFolder(long id)
 {
-    QNetworkReply* reply = ServerConnect::getInstance().http_post("/folders/" + QString::number(id));
+    QNetworkReply* reply = ServerConnect::getInstance().http_delete("/folders/" + QString::number(id));
     replyMap.insert(reply, requestType::DELETE_FOLDER);
 }
 void ShowPanel::UploadFile()
@@ -339,24 +339,28 @@ void ShowPanel::requestCallback(QNetworkReply* reply)
                 break;
             case requestType::ADD_FOLDER:
                 {
-
-                } break;
+                    refreshCurFolderInfo();
+                }
+                break;
             case requestType::DELETE_FOLDER:
                 {
-
-                } break;
+                    refreshCurFolderInfo();
+                }
+                break;
             case requestType::UPLOAD_FILE:
                 {
-
-                } break;
+                    refreshCurFolderInfo();
+                }
+                break;
             case requestType::GET_FILE:
                 {
 
                 } break;
             case requestType::DELETE_FILE:
                 {
-
-                } break;
+                    refreshCurFolderInfo();
+                }
+                break;
             case requestType::DOWNLOAD_FILE:
                 {
 
@@ -422,12 +426,20 @@ void ShowPanel::setSelected(Qt::MouseButton info, obj_frame* of)
 
 void ShowPanel::resetSelected()
 {
-    while(selectedObj.isEmpty() == false)
+    while(getSelectedObj() != nullptr);
+    emit enableObjbtn(false);
+}
+
+obj_frame* ShowPanel::getSelectedObj()
+{
+    obj_frame* obj = nullptr;
+    if(selectedObj.isEmpty() == false)
     {
         selectedObj.front()->setUnselected();
+        obj = selectedObj.front();
         selectedObj.pop_front();
     }
-    emit enableObjbtn(false);
+    return obj;
 }
 
 
@@ -443,7 +455,7 @@ void ShowPanel::createPanelToolPalette(const QPoint&)
     panelToolPalette->exec(QCursor::pos());
 }
 
-void ShowPanel::refresh()
+void ShowPanel::refreshCurFolderInfo()
 {
     replyMap.insert(GetFolder(curFolderId), requestType::GET_FOLDER_REFRESH);
 }
@@ -470,10 +482,34 @@ void ShowPanel::getFileInfo(int id)
     replyMap.insert(GetFile(id), requestType::GET_FILE);
 }
 
+void ShowPanel::deleteObj()
+{
+    if(QMessageBox::warning(this, tr("警告！"), tr("确认删除文件夹？"), QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Ok)
+    {
+        obj_frame* objf;
+        while((objf = getSelectedObj()) != nullptr)
+        {
+            if(objf->isFile)
+                DeleteFolder(objf->obj->id);
+            else
+                DeleteFile(objf->obj->id);
+        }
+    }
+}
+
+void ShowPanel::addNewFolder()
+{
+    bool ok;
+    QString text = QInputDialog::getText(this, tr("创建文件夹"),
+                                         tr("文件夹名称:"), QLineEdit::Normal,
+                                         tr("新建文件夹（1）"), &ok);
+    if (ok && !text.isEmpty())
+        AddFolder(text, curFolderId);
+}
+
 
 void ShowPanel::mousePressEvent(QMouseEvent* event)
 {
-//    if(event->button() == Qt::LeftButton)
     this->resetSelected();
 }
 

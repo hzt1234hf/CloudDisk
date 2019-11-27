@@ -2,18 +2,27 @@
 #define SHOWPANEL_H
 
 #include <QWidget>
+#include <QMenu>
+
+//#include <QNetworkRequest>
+//#include <QNetworkReply>
+//#include <QNetworkAccessManager>
+
 #include <QQueue>
-#include <QNetworkRequest>
-#include <QNetworkReply>
-#include <QNetworkAccessManager>
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QJsonArray>
+
+#include <QKeyEvent>
+
+#include <QInputDialog>
+#include <QMessageBox>
+
 #include "obj_frame.h"
 #include "../serverconnect.h"
 
-#include <QKeyEvent>
-#include <QMenu>
+
+
 
 
 class ShowPanel : public QWidget
@@ -71,6 +80,8 @@ private:
 
     void addLastFolder(long );
     long getLastFolder();
+    void resetSelected();
+    obj_frame* getSelectedObj();
 
     /** 服务器通信API */
     void GetFolders();
@@ -96,22 +107,25 @@ public slots:
     void add();
     void requestCallback(QNetworkReply*);
     void setSelected(Qt::MouseButton, obj_frame*);
-    void resetSelected();
+
     void createObjToolPalette(const QPoint&);
     void createPanelToolPalette(const QPoint&);
 
     /** 服务器通信应用 */
-    void refresh();
+    void refreshCurFolderInfo();
     void getLastFolderInfo();
     void getUpperFolderInfo();
     void getFolderInfo(int id);
     void getFileInfo(int id);
+    void addNewFolder();
+    void deleteObj();
 
 protected:
-    void mousePressEvent(QMouseEvent* event);
-    void keyReleaseEvent(QKeyEvent* event);
-    void keyPressEvent(QKeyEvent* event);
+    void mousePressEvent(QMouseEvent* event) override;
+    void keyReleaseEvent(QKeyEvent* event) override;
+    void keyPressEvent(QKeyEvent* event) override;
     void paintEvent(QPaintEvent* event) override;
+
 };
 
 #endif // SHOWPANEL_H

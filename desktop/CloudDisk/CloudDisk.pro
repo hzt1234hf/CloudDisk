@@ -30,6 +30,7 @@ SOURCES += \
         class_obj/obj_folder.cpp \
         class_obj/obj_frame.cpp \
         class_obj/showpanel.cpp \
+        customClass/customtabwidget.cpp \
         login.cpp \
         main.cpp \
         clouddiskwindow.cpp \
@@ -42,6 +43,7 @@ HEADERS += \
         class_obj/obj_frame.h \
         class_obj/showpanel.h \
         clouddiskwindow.h \
+        customClass/customtabwidget.h \
         login.h \
         serverconnect.h
 
