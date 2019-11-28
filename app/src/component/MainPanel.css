@@ -1,9 +1,11 @@
-.folderItem{
-    /*color:#000;*/
-    font-weight: bold;
+.obj_item{
+    color:#007bff;
+
 }
-.folderItem:hover{
-    /*color:#7788DD;*/
+.obj_item:hover{
+    color:#0056b3;
+    font-weight: bold;
+    cursor:pointer
 }
 
 .font-set{

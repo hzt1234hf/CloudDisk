@@ -224,12 +224,12 @@ class MainPanel extends Component {
                 <ListGroup.Link display="flex" justifyContent="between" alignItems="center"
                                 key={folder.id}>
 
-                    <BA href="#" className="folderItem" display="flex" float="left" alignItems="center" onClick={() => {
+                    <BDiv className="obj_item" display="flex" float="left" alignItems="center" onClick={() => {
                         this.changeToChildSelectedFolder(folder)
                     }}>
                         <FontAwesomeIcon className="float-left ml-1 mr-1" icon={faFolder}/>
                         <BSpan ml="1" mr="1">{folder.name}</BSpan>
-                    </BA>
+                    </BDiv>
                     <BDiv float="right">
                         <Button danger mr="1" ml="1" aria-label="Close"
                                 onClick={() => this.deleteFolder(folder.name, folder.id)}>
@@ -271,10 +271,10 @@ class MainPanel extends Component {
             return (
                 <ListGroup.Link display="flex" justifyContent="between" alignItems="center"
                                 key={file.id}>
-                    <BA href="#" display="flex" alignItems="center" float="left" className="fileItem">
+                    <BDiv display="flex" alignItems="center" float="left" className="obj_item">
                         <FontAwesomeIcon className="float-left ml-1 mr-1" icon={faFile}/>
                         {file.name}
-                    </BA>
+                    </BDiv>
                     <BDiv float="right">
 
                         <Button danger mr="1" ml="1"

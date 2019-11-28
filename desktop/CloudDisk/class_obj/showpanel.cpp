@@ -10,7 +10,7 @@ ShowPanel::ShowPanel(QWidget* parent) : QWidget(parent)
                            background-color: rgb(255, 255, 255);\
                             }");
 
-    connect(ServerConnect::getInstance().getNetwordAccessManager(), SIGNAL(finished(QNetworkReply*)), this, SLOT(requestCallback(QNetworkReply*)));
+    connect(ServerConnect::getInstance().getNetworkAccessManager(), SIGNAL(finished(QNetworkReply*)), this, SLOT(requestCallback(QNetworkReply*)));
     connect(this, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(createPanelToolPalette(const QPoint&)));
     refreshCurFolderInfo();
 }
@@ -201,8 +201,23 @@ void ShowPanel::DeleteFolder(long id)
     QNetworkReply* reply = ServerConnect::getInstance().http_delete("/folders/" + QString::number(id));
     replyMap.insert(reply, requestType::DELETE_FOLDER);
 }
-void ShowPanel::UploadFile()
+void ShowPanel::UploadFile(QString filePath)
 {
+    QHttpMultiPart* multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
+
+    QHttpPart filePart;
+    filePart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/octet-stream"));
+    filePart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"file\"; filename=" + QFileInfo(filePath).fileName() + ""));
+    QFile* file = new QFile(filePath);
+    file->open(QIODevice::ReadOnly);
+    filePart.setBodyDevice(file);
+    file->setParent(multiPart); // we cannot delete the file now, so delete it with the multiPart
+
+    multiPart->append(filePart);
+
+    QNetworkReply* reply = ServerConnect::getInstance().http_post("/folders/" + QString::number(this->curFolderId), multiPart);
+    multiPart->setParent(reply);// delete the multiPart with the reply
+    replyMap.insert(reply, requestType::UPLOAD_FILE);
 }
 
 QNetworkReply* ShowPanel::GetFile(long id)
@@ -390,6 +405,7 @@ void ShowPanel::requestCallback(QNetworkReply* reply)
                     qDebug() << "???";
                 }
         }
+        reply->deleteLater();
     }
 }
 
@@ -482,6 +498,15 @@ void ShowPanel::getFileInfo(int id)
     replyMap.insert(GetFile(id), requestType::GET_FILE);
 }
 
+void ShowPanel::uploadLocalFile()
+{
+    QString path = QFileDialog::getOpenFileName(this, tr("选择文件"));
+    if(path.isEmpty() == false)
+    {
+        UploadFile(path);
+    }
+}
+
 void ShowPanel::deleteObj()
 {
     if(QMessageBox::warning(this, tr("警告！"), tr("确认删除文件夹？"), QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Ok)
@@ -490,9 +515,9 @@ void ShowPanel::deleteObj()
         while((objf = getSelectedObj()) != nullptr)
         {
             if(objf->isFile)
-                DeleteFolder(objf->obj->id);
-            else
                 DeleteFile(objf->obj->id);
+            else
+                DeleteFolder(objf->obj->id);
         }
     }
 }
@@ -512,7 +537,6 @@ void ShowPanel::mousePressEvent(QMouseEvent* event)
 {
     this->resetSelected();
 }
-
 void ShowPanel::keyReleaseEvent(QKeyEvent* event)
 {
     qDebug() << "release";

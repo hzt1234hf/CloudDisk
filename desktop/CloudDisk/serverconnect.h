@@ -28,10 +28,12 @@ public:
     ~ServerConnect();
 
     static ServerConnect& getInstance();
-    QNetworkAccessManager* getNetwordAccessManager();
+    QNetworkAccessManager* getNetworkAccessManager();
 
     QNetworkReply* http_get(QString url, QMap<QString, QString> param = QMap<QString, QString>());
     QNetworkReply* http_post(QString url, QJsonDocument jsonData = QJsonDocument());
+    QNetworkReply* http_post(QString url,  QHttpMultiPart* multiPart);
+
     QNetworkReply* http_delete(QString url);
     QNetworkReply* http_patch(QString url, QJsonDocument jsonData);
 

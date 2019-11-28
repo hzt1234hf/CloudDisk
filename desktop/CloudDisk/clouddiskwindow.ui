@@ -208,7 +208,7 @@ QWidget#address_control &gt; QPushButton:pressed{
               <string>后退</string>
              </property>
              <property name="icon">
-              <iconset resource="res.qrc">
+              <iconset>
                <normaloff>:/panel/icon/panel/back.png</normaloff>:/panel/icon/panel/back.png</iconset>
              </property>
             </widget>
@@ -222,7 +222,7 @@ QWidget#address_control &gt; QPushButton:pressed{
               <string>上一级</string>
              </property>
              <property name="icon">
-              <iconset resource="res.qrc">
+              <iconset>
                <normaloff>:/panel/icon/panel/upper.png</normaloff>:/panel/icon/panel/upper.png</iconset>
              </property>
             </widget>
@@ -233,7 +233,7 @@ QWidget#address_control &gt; QPushButton:pressed{
               <string>刷新</string>
              </property>
              <property name="icon">
-              <iconset resource="res.qrc">
+              <iconset>
                <normaloff>:/panel/icon/panel/refresh (2).png</normaloff>:/panel/icon/panel/refresh (2).png</iconset>
              </property>
             </widget>
@@ -350,7 +350,7 @@ QPushButton:pressed{
               <string>新建文件夹</string>
              </property>
              <property name="icon">
-              <iconset resource="res.qrc">
+              <iconset>
                <normaloff>:/panel/icon/panel/addfolder.png</normaloff>:/panel/icon/panel/addfolder.png</iconset>
              </property>
             </widget>
@@ -361,7 +361,7 @@ QPushButton:pressed{
               <string>上传</string>
              </property>
              <property name="icon">
-              <iconset resource="res.qrc">
+              <iconset>
                <normaloff>:/panel/icon/panel/upload (2).png</normaloff>:/panel/icon/panel/upload (2).png</iconset>
              </property>
             </widget>
@@ -375,7 +375,7 @@ QPushButton:pressed{
               <string>下载</string>
              </property>
              <property name="icon">
-              <iconset resource="res.qrc">
+              <iconset>
                <normaloff>:/panel/icon/panel/download (2).png</normaloff>:/panel/icon/panel/download (2).png</iconset>
              </property>
             </widget>
@@ -389,7 +389,7 @@ QPushButton:pressed{
               <string>分享</string>
              </property>
              <property name="icon">
-              <iconset resource="res.qrc">
+              <iconset>
                <normaloff>:/panel/icon/panel/share.png</normaloff>:/panel/icon/panel/share.png</iconset>
              </property>
             </widget>
@@ -403,7 +403,7 @@ QPushButton:pressed{
               <string>删除</string>
              </property>
              <property name="icon">
-              <iconset resource="res.qrc">
+              <iconset>
                <normaloff>:/panel/icon/panel/delete.png</normaloff>:/panel/icon/panel/delete.png</iconset>
              </property>
             </widget>
@@ -417,7 +417,7 @@ QPushButton:pressed{
               <string>建立同步</string>
              </property>
              <property name="icon">
-              <iconset resource="res.qrc">
+              <iconset>
                <normaloff>:/panel/icon/panel/sync.png</normaloff>:/panel/icon/panel/sync.png</iconset>
              </property>
             </widget>
@@ -461,7 +461,7 @@ QPushButton:pressed{
          <number>0</number>
         </property>
         <item row="0" column="0">
-         <widget class="CustomTabWidget" name="tabWidget_2">
+         <widget class="TransferPanel" name="tabWidget_2">
           <property name="styleSheet">
            <string notr="true">QTabWidget::pane { /* The tab widget frame */
     border-left: 1px solid #C2C7CB;
@@ -501,22 +501,82 @@ QTabBar::tab:!selected {
            <enum>QTabWidget::West</enum>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>2</number>
           </property>
           <widget class="QWidget" name="tab_1">
            <attribute name="title">
             <string>正在下载</string>
            </attribute>
+           <layout class="QGridLayout" name="gridLayout_5">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <item row="0" column="0">
+             <widget class="QListView" name="listView"/>
+            </item>
+           </layout>
           </widget>
           <widget class="QWidget" name="tab_2">
            <attribute name="title">
             <string>正在上传</string>
            </attribute>
+           <layout class="QGridLayout" name="gridLayout_6">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <item row="0" column="0">
+             <widget class="QListView" name="listView_2"/>
+            </item>
+           </layout>
           </widget>
           <widget class="QWidget" name="tab_3">
            <attribute name="title">
             <string>下载完成</string>
            </attribute>
+           <layout class="QGridLayout" name="gridLayout_7">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <item row="0" column="0">
+             <widget class="QListView" name="listView_3"/>
+            </item>
+           </layout>
           </widget>
          </widget>
         </item>
@@ -539,7 +599,7 @@ QTabBar::tab:!selected {
   <widget class="QStatusBar" name="statusBar"/>
   <action name="action_upload">
    <property name="icon">
-    <iconset resource="res.qrc">
+    <iconset>
      <normaloff>:/panel/icon/panel/upload (2).png</normaloff>:/panel/icon/panel/upload (2).png</iconset>
    </property>
    <property name="text">
@@ -554,7 +614,7 @@ QTabBar::tab:!selected {
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset resource="res.qrc">
+    <iconset>
      <normaloff>:/panel/icon/panel/back.png</normaloff>:/panel/icon/panel/back.png</iconset>
    </property>
    <property name="text">
@@ -569,7 +629,7 @@ QTabBar::tab:!selected {
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset resource="res.qrc">
+    <iconset>
      <normaloff>:/panel/icon/panel/upper.png</normaloff>:/panel/icon/panel/upper.png</iconset>
    </property>
    <property name="text">
@@ -581,7 +641,7 @@ QTabBar::tab:!selected {
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset resource="res.qrc">
+    <iconset>
      <normaloff>:/panel/icon/panel/download (2).png</normaloff>:/panel/icon/panel/download (2).png</iconset>
    </property>
    <property name="text">
@@ -590,7 +650,7 @@ QTabBar::tab:!selected {
   </action>
   <action name="action_config">
    <property name="icon">
-    <iconset resource="res.qrc">
+    <iconset>
      <normaloff>:/panel/icon/panel/config.png</normaloff>:/panel/icon/panel/config.png</iconset>
    </property>
    <property name="text">
@@ -599,7 +659,7 @@ QTabBar::tab:!selected {
   </action>
   <action name="action_addfolder">
    <property name="icon">
-    <iconset resource="res.qrc">
+    <iconset>
      <normaloff>:/panel/icon/panel/addfolder.png</normaloff>:/panel/icon/panel/addfolder.png</iconset>
    </property>
    <property name="text">
@@ -611,7 +671,7 @@ QTabBar::tab:!selected {
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset resource="res.qrc">
+    <iconset>
      <normaloff>:/panel/icon/panel/delete.png</normaloff>:/panel/icon/panel/delete.png</iconset>
    </property>
    <property name="text">
@@ -623,7 +683,7 @@ QTabBar::tab:!selected {
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset resource="res.qrc">
+    <iconset>
      <normaloff>:/panel/icon/panel/share.png</normaloff>:/panel/icon/panel/share.png</iconset>
    </property>
    <property name="text">
@@ -632,7 +692,7 @@ QTabBar::tab:!selected {
   </action>
   <action name="action_refresh">
    <property name="icon">
-    <iconset resource="res.qrc">
+    <iconset>
      <normaloff>:/panel/icon/panel/refresh (2).png</normaloff>:/panel/icon/panel/refresh (2).png</iconset>
    </property>
    <property name="text">
@@ -644,7 +704,7 @@ QTabBar::tab:!selected {
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset resource="res.qrc">
+    <iconset>
      <normaloff>:/panel/icon/panel/sync.png</normaloff>:/panel/icon/panel/sync.png</iconset>
    </property>
    <property name="text">
@@ -664,14 +724,12 @@ QTabBar::tab:!selected {
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>CustomTabWidget</class>
+   <class>TransferPanel</class>
    <extends>QTabWidget</extends>
-   <header location="global">customClass/customtabwidget.h</header>
+   <header location="global">class_obj/transferpanel.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources>
-  <include location="res.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

@@ -7,6 +7,8 @@
 //#include <QNetworkRequest>
 //#include <QNetworkReply>
 //#include <QNetworkAccessManager>
+#include <QHttpMultiPart>
+#include <QHttpPart>
 
 #include <QQueue>
 #include <QJsonObject>
@@ -16,11 +18,12 @@
 #include <QKeyEvent>
 
 #include <QInputDialog>
+#include <QFileDialog>
 #include <QMessageBox>
 
 #include "obj_frame.h"
+#include "comdef.h"
 #include "../serverconnect.h"
-
 
 
 
@@ -44,13 +47,7 @@ private:
     int curCount_MaxRowObj = 0;
 
 
-    enum class requestType {GET_FOLDERS,
-                            GET_FOLDER, GET_FOLDER_REFRESH, GET_FOLDER_LAST,
-                            ADD_FOLDER,
-                            DELETE_FOLDER,
-                            UPLOAD_FILE, GET_FILE, DELETE_FILE, DOWNLOAD_FILE,
-                            GET_SHARE_OBJ_INFO, GET_SHARE_FOLDER, SET_OBJ_SHARED, SET_SHARED_OBJ_PASSWORD, DOWNLOAD_SHAREOBJ
-                           };
+
     QMap<QNetworkReply*, requestType> replyMap; // 请求映射数组
 
     const long initFolderId = 2;        // 初始目录ID
@@ -88,7 +85,7 @@ private:
     QNetworkReply* GetFolder(long id);
     void AddFolder(QString name, long parentid);
     void DeleteFolder(long id);
-    void UploadFile();  //  未编写
+    void UploadFile(QString);
     QNetworkReply* GetFile(long id);
     void DeleteFile(long fileid);
     void DownloadFile(long fileid);// 未编写
@@ -117,6 +114,7 @@ public slots:
     void getUpperFolderInfo();
     void getFolderInfo(int id);
     void getFileInfo(int id);
+    void uploadLocalFile();
     void addNewFolder();
     void deleteObj();
 

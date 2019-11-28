@@ -8,7 +8,7 @@ LogIn::LogIn(QWidget* parent) :
     ui->setupUi(this);
     this->setWindowFlags(Qt::FramelessWindowHint);
     connect(ui->login, SIGNAL(clicked()), this, SLOT(login()));
-    connect(ServerConnect::getInstance().getNetwordAccessManager(), SIGNAL(finished(QNetworkReply*)), this, SLOT(response(QNetworkReply*)));
+    connect(ServerConnect::getInstance().getNetworkAccessManager(), SIGNAL(finished(QNetworkReply*)), this, SLOT(response(QNetworkReply*)));
 }
 
 

@@ -20,8 +20,10 @@ CloudDiskWindow::CloudDiskWindow(QWidget* parent) :
     connect(ui->btn_refresh, SIGNAL(clicked()), ui->show_panel, SLOT(refreshCurFolderInfo()));
     connect(ui->action_addfolder, SIGNAL(triggered()), ui->show_panel, SLOT(addNewFolder()));
     connect(ui->btn_addfolder, SIGNAL(clicked()), ui->show_panel, SLOT(addNewFolder()));
-    connect(ui->action_delete, SIGNAL(triggered()), ui->show_panel, SLOT(delFolder()));
-    connect(ui->btn_delete, SIGNAL(clicked()), ui->show_panel, SLOT(delFolder()));
+    connect(ui->action_delete, SIGNAL(triggered()), ui->show_panel, SLOT(deleteObj()));
+    connect(ui->btn_delete, SIGNAL(clicked()), ui->show_panel, SLOT(deleteObj()));
+    connect(ui->action_upload, SIGNAL(triggered()), ui->show_panel, SLOT(uploadLocalFile()));
+    connect(ui->btn_upload, SIGNAL(clicked()), ui->show_panel, SLOT(uploadLocalFile()));
 
     ui->show_panel->objToolPalette->addAction(ui->action_delete);
     ui->show_panel->objToolPalette->addAction(ui->action_download);
@@ -33,6 +35,8 @@ CloudDiskWindow::CloudDiskWindow(QWidget* parent) :
     ui->show_panel->panelToolPalette->addAction(ui->action_addfolder);
     ui->show_panel->panelToolPalette->addAction(ui->action_refresh);
     ui->show_panel->panelToolPalette->addAction(ui->action_upload);
+
+
 }
 
 CloudDiskWindow::~CloudDiskWindow()

@@ -30,20 +30,21 @@ SOURCES += \
         class_obj/obj_folder.cpp \
         class_obj/obj_frame.cpp \
         class_obj/showpanel.cpp \
-        customClass/customtabwidget.cpp \
+        class_obj/transferpanel.cpp \
         login.cpp \
         main.cpp \
         clouddiskwindow.cpp \
         serverconnect.cpp
 
 HEADERS += \
+        class_obj/comdef.h \
         class_obj/obj_base.h \
         class_obj/obj_file.h \
         class_obj/obj_folder.h \
         class_obj/obj_frame.h \
         class_obj/showpanel.h \
+        class_obj/transferpanel.h \
         clouddiskwindow.h \
-        customClass/customtabwidget.h \
         login.h \
         serverconnect.h
 

@@ -1,16 +1,20 @@
-#ifndef CUSTOMTABWIDGET_H
-#define CUSTOMTABWIDGET_H
+#ifndef TRANSFERPANEL_H
+#define TRANSFERPANEL_H
+
 
 #include <QTabWidget>
 #include <QTabBar>
+
 #include <QStylePainter>
 #include <QStyleOption>
 
+#include "comdef.h"
+#include "../serverconnect.h"
 
-class CustomTabBar: public QTabBar
+class TransferPanelTabBar: public QTabBar
 {
 public:
-    explicit CustomTabBar(QWidget* parent = nullptr): QTabBar(parent)
+    explicit TransferPanelTabBar(QWidget* parent = nullptr): QTabBar(parent)
     {
 
     }
@@ -48,15 +52,22 @@ protected:
     }
 };
 
-class CustomTabWidget : public QTabWidget
+class TransferPanel : public QTabWidget
 {
     Q_OBJECT
 public:
-    CustomTabWidget(QWidget* parent = 0): QTabWidget(parent)
-    {
-        setTabBar(new CustomTabBar);
-        setTabPosition(QTabWidget::West);
-    }
+
+private:
+
+public:
+    TransferPanel(QWidget* parent = 0);
+
+private:
+
+signals:
+
+public slots:
+
 };
 
-#endif // CUSTOMTABWIDGET_H
+#endif // TRANSFERPANEL_H

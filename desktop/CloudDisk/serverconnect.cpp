@@ -24,7 +24,7 @@ ServerConnect& ServerConnect::getInstance()
     return *serverConnect;
 }
 
-QNetworkAccessManager* ServerConnect::getNetwordAccessManager()
+QNetworkAccessManager* ServerConnect::getNetworkAccessManager()
 {
     return accessManager;
 }
@@ -87,6 +87,14 @@ QNetworkReply* ServerConnect::http_post(QString url, QJsonDocument jsonData)
     request.setUrl(QUrl(ServerConnect::address + url));
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     QNetworkReply* reply = accessManager->post(request, jsonData.toJson());
+    return reply;
+}
+
+QNetworkReply* ServerConnect::http_post(QString url, QHttpMultiPart* multiPart)
+{
+    QNetworkRequest request;
+    request.setUrl(QUrl(ServerConnect::address + url));
+    QNetworkReply* reply = accessManager->post(request, multiPart);
     return reply;
 }
 

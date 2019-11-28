@@ -241,10 +241,8 @@ def login():
         # 生成 Token，有效期为一周
         s = URLSafeSerializer(SecreyKey, expires_in=7 * 24 * 3600)
 
-        # return jsonify(message='OK',
-        #                token=s.dumps({'key': SecreyKey}).decode('utf-8'))
         return jsonify(message='OK',
-                       token='gfgerewrfwef')
+                       token=s.dumps({'key': SecreyKey}).decode('utf-8'))
     else:
         return jsonify(message='unauthorized'), 401
 
@@ -284,7 +282,7 @@ def folders():
                                   isShareEncryped=False, sharePassword="", shareUrl="",
                                   sharePeriod=datetime.datetime.now())
                 f.save()
-                return jsonify(message='OK'), 201
+                return jsonify(message='OK', folderid=f.id), 201
             except peewee.IntegrityError as e:
                 return jsonify(message='error'), 409
         else:
