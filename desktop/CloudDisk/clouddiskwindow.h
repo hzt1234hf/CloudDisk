@@ -2,6 +2,9 @@
 #define CLOUDDISKWINDOW_H
 
 #include <QMainWindow>
+#include "class_obj/transferitem.h"
+#include "class_obj/transferitemprocessingdelegate.h"
+
 #include "login.h"
 
 namespace Ui
@@ -19,6 +22,7 @@ public:
 
 private:
     Ui::CloudDiskWindow* ui;
+    TransferItem* transferItemModel;
 
 protected slots:
     void enableObjBtn(bool);

@@ -76,9 +76,9 @@ QTabWidget#mainTabWidget &gt; QTabBar::tab:!selected {
 }</string>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
-      <widget class="QWidget" name="tab_4">
+      <widget class="QWidget" name="disk_panel">
        <attribute name="title">
         <string>网盘目录</string>
        </attribute>
@@ -208,7 +208,7 @@ QWidget#address_control &gt; QPushButton:pressed{
               <string>后退</string>
              </property>
              <property name="icon">
-              <iconset>
+              <iconset resource="res.qrc">
                <normaloff>:/panel/icon/panel/back.png</normaloff>:/panel/icon/panel/back.png</iconset>
              </property>
             </widget>
@@ -222,7 +222,7 @@ QWidget#address_control &gt; QPushButton:pressed{
               <string>上一级</string>
              </property>
              <property name="icon">
-              <iconset>
+              <iconset resource="res.qrc">
                <normaloff>:/panel/icon/panel/upper.png</normaloff>:/panel/icon/panel/upper.png</iconset>
              </property>
             </widget>
@@ -233,7 +233,7 @@ QWidget#address_control &gt; QPushButton:pressed{
               <string>刷新</string>
              </property>
              <property name="icon">
-              <iconset>
+              <iconset resource="res.qrc">
                <normaloff>:/panel/icon/panel/refresh (2).png</normaloff>:/panel/icon/panel/refresh (2).png</iconset>
              </property>
             </widget>
@@ -350,7 +350,7 @@ QPushButton:pressed{
               <string>新建文件夹</string>
              </property>
              <property name="icon">
-              <iconset>
+              <iconset resource="res.qrc">
                <normaloff>:/panel/icon/panel/addfolder.png</normaloff>:/panel/icon/panel/addfolder.png</iconset>
              </property>
             </widget>
@@ -361,7 +361,7 @@ QPushButton:pressed{
               <string>上传</string>
              </property>
              <property name="icon">
-              <iconset>
+              <iconset resource="res.qrc">
                <normaloff>:/panel/icon/panel/upload (2).png</normaloff>:/panel/icon/panel/upload (2).png</iconset>
              </property>
             </widget>
@@ -375,7 +375,7 @@ QPushButton:pressed{
               <string>下载</string>
              </property>
              <property name="icon">
-              <iconset>
+              <iconset resource="res.qrc">
                <normaloff>:/panel/icon/panel/download (2).png</normaloff>:/panel/icon/panel/download (2).png</iconset>
              </property>
             </widget>
@@ -389,7 +389,7 @@ QPushButton:pressed{
               <string>分享</string>
              </property>
              <property name="icon">
-              <iconset>
+              <iconset resource="res.qrc">
                <normaloff>:/panel/icon/panel/share.png</normaloff>:/panel/icon/panel/share.png</iconset>
              </property>
             </widget>
@@ -403,7 +403,7 @@ QPushButton:pressed{
               <string>删除</string>
              </property>
              <property name="icon">
-              <iconset>
+              <iconset resource="res.qrc">
                <normaloff>:/panel/icon/panel/delete.png</normaloff>:/panel/icon/panel/delete.png</iconset>
              </property>
             </widget>
@@ -417,7 +417,7 @@ QPushButton:pressed{
               <string>建立同步</string>
              </property>
              <property name="icon">
-              <iconset>
+              <iconset resource="res.qrc">
                <normaloff>:/panel/icon/panel/sync.png</normaloff>:/panel/icon/panel/sync.png</iconset>
              </property>
             </widget>
@@ -440,7 +440,7 @@ QPushButton:pressed{
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_2">
+      <widget class="QWidget" name="trans_panel">
        <attribute name="title">
         <string>传输列表</string>
        </attribute>
@@ -524,7 +524,29 @@ QTabBar::tab:!selected {
              <number>0</number>
             </property>
             <item row="0" column="0">
-             <widget class="QListView" name="listView"/>
+             <widget class="QTableView" name="tableView_download">
+              <property name="selectionMode">
+               <enum>QAbstractItemView::SingleSelection</enum>
+              </property>
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
+              </property>
+              <property name="showGrid">
+               <bool>false</bool>
+              </property>
+              <attribute name="horizontalHeaderVisible">
+               <bool>false</bool>
+              </attribute>
+              <attribute name="horizontalHeaderMinimumSectionSize">
+               <number>1</number>
+              </attribute>
+              <attribute name="verticalHeaderVisible">
+               <bool>false</bool>
+              </attribute>
+              <attribute name="verticalHeaderMinimumSectionSize">
+               <number>1</number>
+              </attribute>
+             </widget>
             </item>
            </layout>
           </widget>
@@ -549,7 +571,29 @@ QTabBar::tab:!selected {
              <number>0</number>
             </property>
             <item row="0" column="0">
-             <widget class="QListView" name="listView_2"/>
+             <widget class="QTableView" name="tableView_upload">
+              <property name="selectionMode">
+               <enum>QAbstractItemView::SingleSelection</enum>
+              </property>
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
+              </property>
+              <property name="showGrid">
+               <bool>false</bool>
+              </property>
+              <attribute name="horizontalHeaderMinimumSectionSize">
+               <number>1</number>
+              </attribute>
+              <attribute name="horizontalHeaderHighlightSections">
+               <bool>false</bool>
+              </attribute>
+              <attribute name="verticalHeaderVisible">
+               <bool>false</bool>
+              </attribute>
+              <attribute name="verticalHeaderMinimumSectionSize">
+               <number>1</number>
+              </attribute>
+             </widget>
             </item>
            </layout>
           </widget>
@@ -574,7 +618,29 @@ QTabBar::tab:!selected {
              <number>0</number>
             </property>
             <item row="0" column="0">
-             <widget class="QListView" name="listView_3"/>
+             <widget class="QTableView" name="tableView_finished">
+              <property name="selectionMode">
+               <enum>QAbstractItemView::SingleSelection</enum>
+              </property>
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
+              </property>
+              <property name="showGrid">
+               <bool>false</bool>
+              </property>
+              <attribute name="horizontalHeaderVisible">
+               <bool>false</bool>
+              </attribute>
+              <attribute name="horizontalHeaderMinimumSectionSize">
+               <number>1</number>
+              </attribute>
+              <attribute name="verticalHeaderVisible">
+               <bool>false</bool>
+              </attribute>
+              <attribute name="verticalHeaderMinimumSectionSize">
+               <number>1</number>
+              </attribute>
+             </widget>
             </item>
            </layout>
           </widget>
@@ -599,7 +665,7 @@ QTabBar::tab:!selected {
   <widget class="QStatusBar" name="statusBar"/>
   <action name="action_upload">
    <property name="icon">
-    <iconset>
+    <iconset resource="res.qrc">
      <normaloff>:/panel/icon/panel/upload (2).png</normaloff>:/panel/icon/panel/upload (2).png</iconset>
    </property>
    <property name="text">
@@ -614,7 +680,7 @@ QTabBar::tab:!selected {
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="res.qrc">
      <normaloff>:/panel/icon/panel/back.png</normaloff>:/panel/icon/panel/back.png</iconset>
    </property>
    <property name="text">
@@ -629,7 +695,7 @@ QTabBar::tab:!selected {
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="res.qrc">
      <normaloff>:/panel/icon/panel/upper.png</normaloff>:/panel/icon/panel/upper.png</iconset>
    </property>
    <property name="text">
@@ -641,7 +707,7 @@ QTabBar::tab:!selected {
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="res.qrc">
      <normaloff>:/panel/icon/panel/download (2).png</normaloff>:/panel/icon/panel/download (2).png</iconset>
    </property>
    <property name="text">
@@ -650,7 +716,7 @@ QTabBar::tab:!selected {
   </action>
   <action name="action_config">
    <property name="icon">
-    <iconset>
+    <iconset resource="res.qrc">
      <normaloff>:/panel/icon/panel/config.png</normaloff>:/panel/icon/panel/config.png</iconset>
    </property>
    <property name="text">
@@ -659,7 +725,7 @@ QTabBar::tab:!selected {
   </action>
   <action name="action_addfolder">
    <property name="icon">
-    <iconset>
+    <iconset resource="res.qrc">
      <normaloff>:/panel/icon/panel/addfolder.png</normaloff>:/panel/icon/panel/addfolder.png</iconset>
    </property>
    <property name="text">
@@ -671,7 +737,7 @@ QTabBar::tab:!selected {
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="res.qrc">
      <normaloff>:/panel/icon/panel/delete.png</normaloff>:/panel/icon/panel/delete.png</iconset>
    </property>
    <property name="text">
@@ -683,7 +749,7 @@ QTabBar::tab:!selected {
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="res.qrc">
      <normaloff>:/panel/icon/panel/share.png</normaloff>:/panel/icon/panel/share.png</iconset>
    </property>
    <property name="text">
@@ -692,7 +758,7 @@ QTabBar::tab:!selected {
   </action>
   <action name="action_refresh">
    <property name="icon">
-    <iconset>
+    <iconset resource="res.qrc">
      <normaloff>:/panel/icon/panel/refresh (2).png</normaloff>:/panel/icon/panel/refresh (2).png</iconset>
    </property>
    <property name="text">
@@ -704,7 +770,7 @@ QTabBar::tab:!selected {
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="res.qrc">
      <normaloff>:/panel/icon/panel/sync.png</normaloff>:/panel/icon/panel/sync.png</iconset>
    </property>
    <property name="text">
@@ -730,6 +796,8 @@ QTabBar::tab:!selected {
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="res.qrc"/>
+ </resources>
  <connections/>
 </ui>

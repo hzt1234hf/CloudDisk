@@ -29,7 +29,10 @@ SOURCES += \
         class_obj/obj_file.cpp \
         class_obj/obj_folder.cpp \
         class_obj/obj_frame.cpp \
+        class_obj/obj_transfer.cpp \
         class_obj/showpanel.cpp \
+        class_obj/transferitem.cpp \
+        class_obj/transferitemprocessingdelegate.cpp \
         class_obj/transferpanel.cpp \
         login.cpp \
         main.cpp \
@@ -42,7 +45,10 @@ HEADERS += \
         class_obj/obj_file.h \
         class_obj/obj_folder.h \
         class_obj/obj_frame.h \
+        class_obj/obj_transfer.h \
         class_obj/showpanel.h \
+        class_obj/transferitem.h \
+        class_obj/transferitemprocessingdelegate.h \
         class_obj/transferpanel.h \
         clouddiskwindow.h \
         login.h \

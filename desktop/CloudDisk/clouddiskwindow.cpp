@@ -6,6 +6,21 @@ CloudDiskWindow::CloudDiskWindow(QWidget* parent) :
     ui(new Ui::CloudDiskWindow)
 {
     ui->setupUi(this);
+
+    transferItemModel = new TransferItem(this);
+    ui->tableView_download->setModel(transferItemModel);
+//    ui->tableView_upload->setModel(transferItemModel);
+//    ui->tableView_finished->setModel(transferItemModel);
+
+    TransferItemProcessingDelegate* processingDelegate = new TransferItemProcessingDelegate(this);
+    ui->tableView_download->setItemDelegate(processingDelegate);
+//    ui->tableView_upload->setItemDelegate(processingDelegate);
+
+    Obj_Transfer* test = new Obj_Transfer(true, 1, "hello.jpg",  100);
+    test->setCurSize(39);
+    transferItemModel->addData(test);
+    transferItemModel->addData(new Obj_Transfer(true, 2, "gggggg.jpg",  150));
+
     connect(ui->action_upload, SIGNAL(triggered()), ui->show_panel, SLOT(add()));
     connect(ui->show_panel, SIGNAL(enableBackbtn(bool)), ui->action_back, SLOT(setEnabled(bool)));
     connect(ui->show_panel, SIGNAL(enableBackbtn(bool)), ui->btn_back, SLOT(setEnabled(bool)));
