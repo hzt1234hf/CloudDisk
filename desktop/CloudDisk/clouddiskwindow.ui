@@ -501,7 +501,7 @@ QTabBar::tab:!selected {
            <enum>QTabWidget::West</enum>
           </property>
           <property name="currentIndex">
-           <number>2</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="tab_1">
            <attribute name="title">
@@ -526,7 +526,7 @@ QTabBar::tab:!selected {
             <item row="0" column="0">
              <widget class="QTableView" name="tableView_download">
               <property name="selectionMode">
-               <enum>QAbstractItemView::SingleSelection</enum>
+               <enum>QAbstractItemView::ExtendedSelection</enum>
               </property>
               <property name="selectionBehavior">
                <enum>QAbstractItemView::SelectRows</enum>
@@ -573,7 +573,7 @@ QTabBar::tab:!selected {
             <item row="0" column="0">
              <widget class="QTableView" name="tableView_upload">
               <property name="selectionMode">
-               <enum>QAbstractItemView::SingleSelection</enum>
+               <enum>QAbstractItemView::ExtendedSelection</enum>
               </property>
               <property name="selectionBehavior">
                <enum>QAbstractItemView::SelectRows</enum>
@@ -620,7 +620,7 @@ QTabBar::tab:!selected {
             <item row="0" column="0">
              <widget class="QTableView" name="tableView_finished">
               <property name="selectionMode">
-               <enum>QAbstractItemView::SingleSelection</enum>
+               <enum>QAbstractItemView::ExtendedSelection</enum>
               </property>
               <property name="selectionBehavior">
                <enum>QAbstractItemView::SelectRows</enum>

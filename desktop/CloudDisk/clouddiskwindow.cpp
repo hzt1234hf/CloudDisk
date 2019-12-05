@@ -12,6 +12,7 @@ CloudDiskWindow::CloudDiskWindow(QWidget* parent) :
 //    ui->tableView_upload->setModel(transferItemModel);
 //    ui->tableView_finished->setModel(transferItemModel);
 
+
     TransferItemProcessingDelegate* processingDelegate = new TransferItemProcessingDelegate(this);
     ui->tableView_download->setItemDelegate(processingDelegate);
 //    ui->tableView_upload->setItemDelegate(processingDelegate);
@@ -20,6 +21,17 @@ CloudDiskWindow::CloudDiskWindow(QWidget* parent) :
     test->setCurSize(39);
     transferItemModel->addData(test);
     transferItemModel->addData(new Obj_Transfer(true, 2, "gggggg.jpg",  150));
+
+
+//    ui->tableView_download->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);    //x先自适应宽度
+//    ui->tableView_download->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+
+//    ui->tableView_download->resizeRowsToContents();
+
+    ui->tableView_download->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    ui->tableView_download->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+    ui->tableView_download->resizeColumnsToContents();
+    ui->tableView_download->setMouseTracking(true);
 
     connect(ui->action_upload, SIGNAL(triggered()), ui->show_panel, SLOT(add()));
     connect(ui->show_panel, SIGNAL(enableBackbtn(bool)), ui->action_back, SLOT(setEnabled(bool)));

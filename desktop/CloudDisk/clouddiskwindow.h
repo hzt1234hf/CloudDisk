@@ -2,6 +2,7 @@
 #define CLOUDDISKWINDOW_H
 
 #include <QMainWindow>
+#include <QHeaderView>
 #include "class_obj/transferitem.h"
 #include "class_obj/transferitemprocessingdelegate.h"
 

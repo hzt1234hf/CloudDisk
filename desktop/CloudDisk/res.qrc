@@ -97,4 +97,24 @@
         <file>icon/panel/addfolder.png</file>
         <file>icon/panel/sync.png</file>
     </qresource>
+    <qresource prefix="/control">
+        <file>icon/control/cancle.png</file>
+        <file>icon/control/cancle-hover.png</file>
+        <file>icon/control/cancle-pressed.png</file>
+        <file>icon/control/delete.png</file>
+        <file>icon/control/delete-hover.png</file>
+        <file>icon/control/delete-pressed.png</file>
+        <file>icon/control/file.png</file>
+        <file>icon/control/file-hover.png</file>
+        <file>icon/control/file-pressed.png</file>
+        <file>icon/control/folder.png</file>
+        <file>icon/control/folder-hover.png</file>
+        <file>icon/control/folder-pressed.png</file>
+        <file>icon/control/pause.png</file>
+        <file>icon/control/pause-hover.png</file>
+        <file>icon/control/pause-pressed.png</file>
+        <file>icon/control/play.png</file>
+        <file>icon/control/play-hover.png</file>
+        <file>icon/control/play-pressed.png</file>
+    </qresource>
 </RCC>

@@ -3,13 +3,14 @@
 TransferItem::TransferItem(QObject* parent)
     : QAbstractTableModel(parent)
 {
+
 }
 
 QVariant TransferItem::headerData(int section, Qt::Orientation orientation, int role) const
 {
     // FIXME: Implement me!
     if (role == Qt::SizeHintRole)
-        return QSize(1, 1);
+        return QSize(0, 0);
     return QVariant();
 }
 
@@ -31,10 +32,8 @@ int TransferItem::columnCount(const QModelIndex& parent) const
 
 QVariant TransferItem::data(const QModelIndex& index, int role) const
 {
-    qDebug() << role << "   " << index;
     if (!index.isValid() || index.row() > m_datum.count())
     {
-        qDebug() << "???" ;
         return QVariant();
     }
     int nColumn = index.column();
@@ -43,7 +42,8 @@ QVariant TransferItem::data(const QModelIndex& index, int role) const
         case Qt::FontRole:          // 6
             return QVariant();
         case Qt::TextAlignmentRole: // 7
-            return QVariant(Qt::AlignLeft | Qt::AlignVCenter);
+//            return QVariant(Qt::AlignLeft | Qt::AlignVCenter);
+            return QVariant();
         case Qt::TextColorRole:     // 9
             return QColor(Qt::black);
         case Qt::CheckStateRole:    // 10
