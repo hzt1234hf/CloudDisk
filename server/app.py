@@ -351,6 +351,7 @@ def folder(folder_id):
             return jsonify(message='error'), 409
     elif request.method == 'POST':
         file = request.files['file']
+        req = request.get_json()
         if file:
             filepath = generate_path(folder_id, folder.path, file.filename)
             target_file = os.path.join(os.path.expanduser(ClouDiskPath), filepath)
@@ -368,6 +369,8 @@ def folder(folder_id):
             except Exception as e:
                 app.logger.exception(e)
                 return jsonify(message='error'), 500
+        elif 'fileinfo' in req:
+            pass
     elif request.method == 'PATCH':
         req = request.get_json()
         folder.isShared = req['isShare']

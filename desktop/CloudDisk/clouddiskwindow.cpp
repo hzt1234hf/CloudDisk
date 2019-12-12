@@ -7,31 +7,44 @@ CloudDiskWindow::CloudDiskWindow(QWidget* parent) :
 {
     ui->setupUi(this);
 
-    transferItemModel = new TransferItem(this);
-    ui->tableView_download->setModel(transferItemModel);
-//    ui->tableView_upload->setModel(transferItemModel);
+    downloadItemModel = new TransferItem(this);
+    uploadItemModel = new TransferItem(this);
+    downloadDelegate = new TransferItemProcessingDelegate(this);
+    uploadDelegate = new TransferItemProcessingDelegate(this);
+
+    ui->tableView_download->setModel(downloadItemModel);
+    ui->tableView_upload->setModel(uploadItemModel);
 //    ui->tableView_finished->setModel(transferItemModel);
 
 
-    TransferItemProcessingDelegate* processingDelegate = new TransferItemProcessingDelegate(this);
-    ui->tableView_download->setItemDelegate(processingDelegate);
-//    ui->tableView_upload->setItemDelegate(processingDelegate);
 
-    Obj_Transfer* test = new Obj_Transfer(true, 1, "hello.jpg",  100);
-    test->setCurSize(39);
-    transferItemModel->addData(test);
-    transferItemModel->addData(new Obj_Transfer(true, 2, "gggggg.jpg",  150));
+    ui->tableView_download->setItemDelegate(downloadDelegate);
+    ui->tableView_upload->setItemDelegate(uploadDelegate);
 
+    Obj_Transfer* test = new Obj_Transfer(false, new Obj_File(nullptr, 4, "33333", 1, QDate()), nullptr,  100);
+    test->setReceivedSize(39);
+    uploadItemModel->addData(test);
+    uploadItemModel->addData(new Obj_Transfer(false, new Obj_File(nullptr, 3, "8hrht", 1, QDate()), nullptr,  150));
 
-//    ui->tableView_download->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);    //x先自适应宽度
-//    ui->tableView_download->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
-
-//    ui->tableView_download->resizeRowsToContents();
 
     ui->tableView_download->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     ui->tableView_download->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     ui->tableView_download->resizeColumnsToContents();
     ui->tableView_download->setMouseTracking(true);
+
+    ui->tableView_upload->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    ui->tableView_upload->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+    ui->tableView_upload->resizeColumnsToContents();
+    ui->tableView_upload->setMouseTracking(true);
+
+
+
+
+    connect(ui->show_panel, SIGNAL(addDownloadFile(Obj_Transfer*)), downloadItemModel, SLOT(addData(Obj_Transfer*)));
+//    connect(ui->show_panel->downloadThreadWorker, SIGNAL(addDownloadItem(Obj_Transfer*)), downloadItemModel, SLOT(addData(Obj_Transfer*)));
+    connect(ui->show_panel, SIGNAL(updateView()), this, SLOT(updateDownloadView()));
+    connect(ui->show_panel, SIGNAL(addDownloadFile(Obj_Transfer*)), this, SLOT(updateDownloadView()));
+
 
     connect(ui->action_upload, SIGNAL(triggered()), ui->show_panel, SLOT(add()));
     connect(ui->show_panel, SIGNAL(enableBackbtn(bool)), ui->action_back, SLOT(setEnabled(bool)));
@@ -51,6 +64,9 @@ CloudDiskWindow::CloudDiskWindow(QWidget* parent) :
     connect(ui->btn_delete, SIGNAL(clicked()), ui->show_panel, SLOT(deleteObj()));
     connect(ui->action_upload, SIGNAL(triggered()), ui->show_panel, SLOT(uploadLocalFile()));
     connect(ui->btn_upload, SIGNAL(clicked()), ui->show_panel, SLOT(uploadLocalFile()));
+
+    connect(ui->action_download, SIGNAL(triggered()), ui->show_panel, SLOT(downloadFile()));
+    connect(ui->btn_download, SIGNAL(clicked()), ui->show_panel, SLOT(downloadFile()));
 
     ui->show_panel->objToolPalette->addAction(ui->action_delete);
     ui->show_panel->objToolPalette->addAction(ui->action_download);
@@ -81,4 +97,23 @@ void CloudDiskWindow::enableObjBtn(bool flag)
     ui->btn_download->setEnabled(flag);
     ui->btn_share->setEnabled(flag);
     ui->btn_sync->setEnabled(flag);
+}
+
+void CloudDiskWindow::updateDownloadView()
+{
+    qDebug() << "3333333333333333";
+    ui->tableView_download->resizeColumnsToContents();
+    ui->tableView_download->resizeRowsToContents();
+}
+
+void CloudDiskWindow::updateUploadloadView()
+{
+    ui->tableView_upload->resizeColumnsToContents();
+    ui->tableView_upload->resizeRowsToContents();
+}
+
+void CloudDiskWindow::updateFinishedView()
+{
+    ui->tableView_finished->resizeColumnsToContents();
+    ui->tableView_finished->resizeRowsToContents();
 }

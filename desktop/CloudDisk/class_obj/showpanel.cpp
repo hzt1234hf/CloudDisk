@@ -1,10 +1,71 @@
 ﻿#include "showpanel.h"
 
+void DownloadThreadWorker::readDownloadData()
+{
+    for(;;)
+    {
+        if(isRunningWork)
+        {
+            QElapsedTimer t;
+            t.start();
+            while(t.elapsed() < 1000);
+        }
+    }
+}
+
+QNetworkReply* DownloadThreadWorker::DownloadFile(long fileid)
+{
+    QNetworkReply* reply = ServerConnect::getInstance().http_get("/files/" + QString::number(fileid));
+    return reply;
+}
+
+void DownloadThreadWorker::stopWork()
+{
+    isRunningWork = false;
+}
+
+void DownloadThreadWorker::startWork()
+{
+    isRunningWork = true;
+}
+
+void DownloadThreadWorker::createDownloadTask(obj_frame* obj)
+{
+    Obj_Transfer* tmp = new Obj_Transfer(true, obj->objfile);
+    if(tmp->openFile())
+    {
+        QNetworkReply* reply = this->DownloadFile(obj->obj->id);
+        reply->setReadBufferSize(40960);
+        tmp->setReply(reply);
+
+        connect(reply, SIGNAL(downloadProgress(qint64, qint64)), tmp, SLOT(downloadProgress(qint64, qint64)));
+        connect(reply, QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error), tmp, &Obj_Transfer::error);
+        connect(reply, SIGNAL(finished()), tmp, SLOT(finished()));
+        connect(reply, SIGNAL(readyRead()), tmp, SLOT(readyRead()));
+        connect(tmp, SIGNAL(updateView()), this, SLOT(requestUpdateView()));
+
+        qDebug() << "Create Download Task.";
+        emit addDownloadItem(tmp);
+    }
+    else
+    {
+        qDebug() << "Open File Error!";
+        tmp->deleteLater();
+    }
+}
+
 
 ShowPanel::ShowPanel(QWidget* parent) : QWidget(parent)
 {
     objToolPalette = new QMenu(this);
     panelToolPalette = new QMenu(this);
+
+    downloadThreadWorker = new DownloadThreadWorker();
+    downloadThreadWorker->moveToThread(&downloadThread);
+    connect(&downloadThread, &QThread::finished, downloadThreadWorker, &QObject::deleteLater);
+    connect(this, &ShowPanel::createDownloadTask, downloadThreadWorker, &DownloadThreadWorker::createDownloadTask);
+    downloadThread.start();
+
 //    objToolPalette->
     this->setStyleSheet("QWidget#show_panel{\
                            background-color: rgb(255, 255, 255);\
@@ -13,6 +74,7 @@ ShowPanel::ShowPanel(QWidget* parent) : QWidget(parent)
     connect(ServerConnect::getInstance().getNetworkAccessManager(), SIGNAL(finished(QNetworkReply*)), this, SLOT(requestCallback(QNetworkReply*)));
     connect(this, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(createPanelToolPalette(const QPoint&)));
     refreshCurFolderInfo();
+    timer.start();
 }
 
 ShowPanel::~ShowPanel()
@@ -231,8 +293,11 @@ void ShowPanel::DeleteFile(long fileid)
     QNetworkReply* reply = ServerConnect::getInstance().http_delete("/files/" + QString::number(fileid));
     replyMap.insert(reply, requestType::DELETE_FILE);
 }
-void ShowPanel::DownloadFile(long fileid)
+QNetworkReply* ShowPanel::DownloadFile(long fileid)
 {
+    QNetworkReply* reply = ServerConnect::getInstance().http_get("/files/" + QString::number(fileid));
+//    replyMap.insert(reply, requestType::DOWNLOAD_FILE);
+    return reply;
 }
 void ShowPanel::SetObjShared(bool isFile, long objId, bool isShared, bool isShareEncryped)
 {
@@ -378,8 +443,9 @@ void ShowPanel::requestCallback(QNetworkReply* reply)
                 break;
             case requestType::DOWNLOAD_FILE:
                 {
-
-                } break;
+                    qDebug() << "Finished.";
+                }
+                break;
             case requestType::GET_SHARE_OBJ_INFO:
                 {
 
@@ -507,6 +573,94 @@ void ShowPanel::uploadLocalFile()
     }
 }
 
+void ShowPanel::downloadFile()
+{
+    for(auto o : selectedObj)
+    {
+
+//        emit createDownloadTask(o);
+
+
+
+
+
+        qDebug() << "create download";
+        Obj_Transfer* tmp = new Obj_Transfer(true, o->objfile);
+        if(tmp->openFile())
+        {
+            QNetworkReply* reply = this->DownloadFile(o->obj->id);
+            reply->setReadBufferSize(40960);
+            tmp->setReply(reply);
+
+            connect(reply, SIGNAL(downloadProgress(qint64, qint64)), tmp, SLOT(downloadProgress(qint64, qint64)));
+            connect(reply, QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error), tmp, &Obj_Transfer::error);
+            connect(reply, SIGNAL(finished()), tmp, SLOT(finished()));
+            connect(reply, SIGNAL(readyRead()), tmp, SLOT(readyRead()));
+            connect(tmp, SIGNAL(updateView()), this, SLOT(requestUpdateView()));
+//            connect(this, SIGNAL(updateView()), tmp, SLOT(readData()));
+
+            emit addDownloadFile(tmp);
+        }
+        else
+        {
+            qDebug() << "Open File Error!";
+            tmp->deleteLater();
+        }
+
+
+
+
+//        QSaveFile* destination = new QSaveFile(o->obj->name, ServerConnect::getInstance().getNetworkAccessManager());
+//        if(destination->open(QFile::WriteOnly))
+//        {
+//            QNetworkReply* reply = this->DownloadFile(o->obj->id);
+//            reply->setReadBufferSize(4096);
+//            Obj_Transfer* tmp = new Obj_Transfer(true, o->objfile, reply);
+
+//            connect(reply, SIGNAL(downloadProgress(qint64, qint64)), tmp, SLOT(downloadProgress(qint64, qint64)));
+//            connect(reply, QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error), tmp, &Obj_Transfer::error);
+//            connect(reply, SIGNAL(finished()), tmp, SLOT(finished()));
+//            connect(tmp, SIGNAL(updateView()), this, SLOT(requestUpdateView()));
+
+//            connect(reply, SIGNAL(readyRead()), tmp, SLOT(readyRead()));
+//            QObject::connect(reply, &QNetworkReply::readyRead, destination, [ = ]()
+//            {
+//                destination->write(reply->readAll());
+//            });
+//            // 提交内容
+//            QObject::connect(reply, &QNetworkReply::finished, destination, &QSaveFile::commit);
+
+//            // 释放内存
+//            QObject::connect(reply, &QNetworkReply::finished, destination, &QSaveFile::deleteLater);
+//            QObject::connect(reply, &QNetworkReply::finished, reply, &QNetworkReply::deleteLater);
+//            QObject::connect(reply, QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error), destination, &QSaveFile::deleteLater);
+//            QObject::connect(reply, QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error), reply, &QNetworkReply::deleteLater);
+
+//            emit addDownloadFile(tmp);
+//        }
+
+
+
+
+
+
+//        QNetworkReply* reply = this->DownloadFile(o->obj->id);
+//        Obj_Transfer* tmp = new Obj_Transfer(true, o->objfile, 0);
+//        tmp->setReply(reply);
+//        connect(reply, SIGNAL(downloadProgress(qint64, qint64)), tmp, SLOT(downloadProgress(qint64, qint64)));
+//        connect(reply, QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error), [ = ](QNetworkReply::NetworkError code)
+//        {
+//            qDebug() << code;
+//        });
+//        connect(reply, SIGNAL(finished()), tmp, SLOT(finished()));
+//        connect(reply, SIGNAL(readyRead()), tmp, SLOT(readyRead()));
+//        connect(tmp, SIGNAL(updateView()), this, SLOT(requestUpdateView()));
+//        emit addDownloadFile(tmp);
+
+//        reply->setReadBufferSize(4096);
+    }
+}
+
 void ShowPanel::deleteObj()
 {
     if(QMessageBox::warning(this, tr("警告！"), tr("确认删除文件夹？"), QMessageBox::Ok | QMessageBox::Cancel) == QMessageBox::Ok)
@@ -519,6 +673,16 @@ void ShowPanel::deleteObj()
             else
                 DeleteFolder(objf->obj->id);
         }
+    }
+}
+
+void ShowPanel::requestUpdateView()
+{
+    int tmp = timer.elapsed();
+    if(tmp - lastTime > TimeInterval)
+    {
+        lastTime = tmp;
+        emit updateView();
     }
 }
 
@@ -539,8 +703,6 @@ void ShowPanel::mousePressEvent(QMouseEvent* event)
 }
 void ShowPanel::keyReleaseEvent(QKeyEvent* event)
 {
-    qDebug() << "release";
-    qDebug() << (Qt::Key)event->key();
     if(event->key() == Qt::Key_Control)
         singleSelected = true;
 }
@@ -549,7 +711,6 @@ void ShowPanel::keyPressEvent(QKeyEvent* event)
 {
     if(event->modifiers() == Qt::ControlModifier)
     {
-        qDebug() << "set false";
         singleSelected = false;
     }
     else
@@ -573,3 +734,5 @@ void ShowPanel::paintEvent(QPaintEvent* event)
         rearrange();
     }
 }
+
+

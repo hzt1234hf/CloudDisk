@@ -21,12 +21,19 @@ public:
     explicit CloudDiskWindow(QWidget* parent = nullptr);
     ~CloudDiskWindow();
 
+
 private:
     Ui::CloudDiskWindow* ui;
-    TransferItem* transferItemModel;
+    TransferItem* downloadItemModel;
+    TransferItem* uploadItemModel;
+    TransferItemProcessingDelegate* downloadDelegate;
+    TransferItemProcessingDelegate* uploadDelegate;
 
 protected slots:
     void enableObjBtn(bool);
+    void updateDownloadView();
+    void updateUploadloadView();
+    void updateFinishedView();
 };
 
 #endif // CLOUDDISKWINDOW_H

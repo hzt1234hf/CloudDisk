@@ -129,21 +129,21 @@ QVariant TransferItem::data(const QModelIndex& index, int role) const
                     case InfoRole_1:    // 1 [(]已下载大小/]总大小
                         {
                             if(m_datum[index.row()]->isFinished)
-                                return m_datum[index.row()]->objSize();
+                                return m_datum[index.row()]->objTotalSizeStr();
                             else
-                                return m_datum[index.row()]->objProcSize();
+                                return m_datum[index.row()]->objSizeScale();
                         }
                         break;
                     case InfoRole_2:    // 2 [下载速度]
                         {
                             if(m_datum[index.row()]->isFinished == false)
-                                return m_datum[index.row()]->objTransSpeed();
+                                return m_datum[index.row()]->objTransferSpeed();
                         }
                         break;
                     case InfoRole_3:    // 3 下载进度
                         {
                             if(m_datum[index.row()]->isFinished == false)
-                                return m_datum[index.row()]->objTransScale();
+                                return m_datum[index.row()]->objTransferRate();
                         }
                         break;
                     case OperatorRole_1:// 4
@@ -170,16 +170,19 @@ QVariant TransferItem::data(const QModelIndex& index, int role) const
     return QVariant();
 }
 
-void TransferItem::addData(Obj_Transfer* dataObj)
-{
-    beginResetModel();
-    m_datum.push_back(dataObj);
-    endResetModel();
-}
+
 
 Qt::ItemFlags TransferItem::flags(const QModelIndex& index) const
 {
     if (!index.isValid())
         return QAbstractItemModel::flags(index);
     return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+}
+
+void TransferItem::addData(Obj_Transfer* dataObj)
+{
+    qDebug() << "new new new";
+    beginResetModel();
+    m_datum.push_back(dataObj);
+    endResetModel();
 }

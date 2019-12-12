@@ -25,7 +25,6 @@ void TransferItemProcessingDelegate::paint(QPainter* painter, const QStyleOption
 //    else
 //        painter->setBrush(option.palette.text());
 
-
     switch(index.column())
     {
         case TransferItem::NameRole:      // 0 名称
@@ -53,7 +52,6 @@ void TransferItemProcessingDelegate::paint(QPainter* painter, const QStyleOption
 
                 itemProgressBar->paintQProgressBar(painter, option, index);
 
-
             }
             break;
         case TransferItem::OperatorRole_1:// 4
@@ -64,7 +62,6 @@ void TransferItemProcessingDelegate::paint(QPainter* painter, const QStyleOption
                     painter->fillRect(option.rect, option.palette.highlight());
 
                 itemButton1->paintButton(painter, option, mousePos);
-
             }
             break;
         case TransferItem::OperatorRole_2:// 5
@@ -271,10 +268,8 @@ void ItemButton::paintButton(QPainter* painter, const QStyleOptionViewItem& opti
     QStyleOptionButton buttonOption;
     buttonOption.rect = QRect(option.rect.x() + posx, option.rect.y() + poxy, width, height);
     buttonOption.state = QStyle::State_Enabled;
-    qDebug() << "!    " << buttonOption.rect << "   " << pos;
     if(buttonOption.rect.contains(pos))
     {
-        qDebug() << "√";
         if(buttonStatus == BUTTON_STATUS::HOVER)
         {
             buttonOption.state |= QStyle::State_MouseOver;
@@ -331,12 +326,11 @@ ItemProgressBar::ItemProgressBar(): progressBarWidget(new QProgressBar())
 void ItemProgressBar::paintQProgressBar(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index)
 {
 
-    double progress = index.data().toDouble();
+    double progress = index.data().toInt();
 
     QStyleOptionProgressBar progressBarOption;
     progressBarOption.initFrom(option.widget);
     progressBarOption.rect = QRect(option.rect.x() + left, option.rect.y() + top, option.rect.width() - left - right, option.rect.height() - top - bottom);
-//    progressBarOption.rect = option.rect;
     progressBarOption.minimum = 0;
     progressBarOption.maximum = 100;
     progressBarOption.progress = progress;

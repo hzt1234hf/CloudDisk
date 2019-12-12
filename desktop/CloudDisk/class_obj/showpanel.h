@@ -10,10 +10,13 @@
 #include <QHttpMultiPart>
 #include <QHttpPart>
 
+#include <QThread>
 #include <QQueue>
+#include <QSaveFile>
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QJsonArray>
+#include <QElapsedTimer>
 
 #include <QKeyEvent>
 
@@ -24,9 +27,31 @@
 #include "obj_frame.h"
 #include "comdef.h"
 #include "../serverconnect.h"
+#include "obj_transfer.h"
 
 
+class DownloadThreadWorker: public QObject
+{
+    Q_OBJECT
 
+public:
+
+private:
+    bool isRunningWork = false;
+
+    QNetworkReply* DownloadFile(long fileid);
+
+public slots:
+    void readDownloadData();
+
+    void stopWork();
+    void startWork();
+
+    void createDownloadTask(obj_frame*);
+
+signals:
+    void addDownloadItem(Obj_Transfer*);
+};
 
 class ShowPanel : public QWidget
 {
@@ -36,6 +61,7 @@ public:
     static constexpr int gap = 10;
     QMenu* objToolPalette;
     QMenu* panelToolPalette;
+    DownloadThreadWorker* downloadThreadWorker;// 线程
 
 private:
     QVector<obj_frame*> files;
@@ -45,6 +71,8 @@ private:
 
     int lastWidth = 0, lastHeight = 0;
     int curCount_MaxRowObj = 0;
+
+    QThread downloadThread;
 
 
 
@@ -57,6 +85,14 @@ private:
 
     bool singleSelected = true;     // 单选模式
     QList<obj_frame*> selectedObj;  // 选中对象数组
+
+    QTime timer;                    // 定时器
+    int lastTime = 0;               // 上一次时间
+    const int TimeInterval = 1000;   // 时间间隔
+
+    QList<Obj_Transfer*> file_download;
+    QList<Obj_Transfer*> file_upload;
+    QList<Obj_Transfer*> file_finished;
 
 
 
@@ -88,17 +124,21 @@ private:
     void UploadFile(QString);
     QNetworkReply* GetFile(long id);
     void DeleteFile(long fileid);
-    void DownloadFile(long fileid);// 未编写
+    QNetworkReply* DownloadFile(long fileid);   // 未编写-over
     void SetObjShared(bool isFile, long objId, bool isShared, bool isShareEncryped);
     void GetShareObjInfo(QString path);
-    void DownloadShareObj();// 未编写
+    void DownloadShareObj();    // 未编写
     void SetShareObjPasswd(QString path, QString password);
-    void GetShareFolder(QString path, long folderid);// 未编写
+    void GetShareFolder(QString path, long folderid);   // 未编写
 
 signals:
     void enableBackbtn(bool);
     void enableUpperbtn(bool);
     void enableObjbtn(bool);
+    void addDownloadFile(Obj_Transfer*);
+    void createDownloadTask(obj_frame*);
+
+    void updateView();
 
 public slots:
     void add();
@@ -115,14 +155,19 @@ public slots:
     void getFolderInfo(int id);
     void getFileInfo(int id);
     void uploadLocalFile();
+    void downloadFile();
     void addNewFolder();
     void deleteObj();
+
+    void requestUpdateView();
 
 protected:
     void mousePressEvent(QMouseEvent* event) override;
     void keyReleaseEvent(QKeyEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;
     void paintEvent(QPaintEvent* event) override;
+
+
 
 };
 
