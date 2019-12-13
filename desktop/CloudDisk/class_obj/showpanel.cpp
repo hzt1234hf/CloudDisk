@@ -13,11 +13,6 @@ void DownloadThreadWorker::readDownloadData()
     }
 }
 
-QNetworkReply* DownloadThreadWorker::DownloadFile(long fileid)
-{
-    QNetworkReply* reply = ServerConnect::getInstance().http_get("/files/" + QString::number(fileid));
-    return reply;
-}
 
 void DownloadThreadWorker::stopWork()
 {
@@ -29,27 +24,40 @@ void DownloadThreadWorker::startWork()
     isRunningWork = true;
 }
 
-void DownloadThreadWorker::createDownloadTask(obj_frame* obj)
+//void DownloadThreadWorker::createDownloadTask(obj_frame* obj)
+//{
+//    Obj_Transfer* tmp = new Obj_Transfer(true, obj->objfile);
+//    if(tmp->openFile())
+//    {
+//        QNetworkReply* reply = this->DownloadFile(obj->obj->id);
+//        reply->setReadBufferSize(40960);
+//        tmp->setReply(reply);
+
+//        connect(reply, SIGNAL(downloadProgress(qint64, qint64)), tmp, SLOT(downloadProgress(qint64, qint64)));
+//        connect(reply, QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error), tmp, &Obj_Transfer::error);
+//        connect(reply, SIGNAL(finished()), tmp, SLOT(finished()));
+//        connect(reply, SIGNAL(readyRead()), tmp, SLOT(readyRead()));
+//        connect(tmp, SIGNAL(updateView()), this, SLOT(requestUpdateView()));
+
+//        qDebug() << "Create Download Task.";
+//        emit addDownloadItem(tmp);
+//    }
+//    else
+//    {
+//        qDebug() << "Open File Error!";
+//        tmp->deleteLater();
+//    }
+//}
+
+void DownloadThreadWorker::createDownloadItem(obj_frame* obj)
 {
-    Obj_Transfer* tmp = new Obj_Transfer(true, obj->objfile);
+    Obj_Transfer* tmp =  new Obj_Transfer(true, obj->objfile);
     if(tmp->openFile())
     {
-        QNetworkReply* reply = this->DownloadFile(obj->obj->id);
-        reply->setReadBufferSize(40960);
-        tmp->setReply(reply);
-
-        connect(reply, SIGNAL(downloadProgress(qint64, qint64)), tmp, SLOT(downloadProgress(qint64, qint64)));
-        connect(reply, QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error), tmp, &Obj_Transfer::error);
-        connect(reply, SIGNAL(finished()), tmp, SLOT(finished()));
-        connect(reply, SIGNAL(readyRead()), tmp, SLOT(readyRead()));
-        connect(tmp, SIGNAL(updateView()), this, SLOT(requestUpdateView()));
-
-        qDebug() << "Create Download Task.";
-        emit addDownloadItem(tmp);
+        emit createDownloadTask(obj, tmp);
     }
     else
     {
-        qDebug() << "Open File Error!";
         tmp->deleteLater();
     }
 }
@@ -63,7 +71,8 @@ ShowPanel::ShowPanel(QWidget* parent) : QWidget(parent)
     downloadThreadWorker = new DownloadThreadWorker();
     downloadThreadWorker->moveToThread(&downloadThread);
     connect(&downloadThread, &QThread::finished, downloadThreadWorker, &QObject::deleteLater);
-    connect(this, &ShowPanel::createDownloadTask, downloadThreadWorker, &DownloadThreadWorker::createDownloadTask);
+    connect(this, &ShowPanel::createDownloadItem, downloadThreadWorker, &DownloadThreadWorker::createDownloadItem);
+    connect(downloadThreadWorker, &DownloadThreadWorker::createDownloadTask, this, &ShowPanel::createDownloadTask);
     downloadThread.start();
 
 //    objToolPalette->
@@ -79,6 +88,9 @@ ShowPanel::ShowPanel(QWidget* parent) : QWidget(parent)
 
 ShowPanel::~ShowPanel()
 {
+    downloadThread.quit();
+    downloadThread.wait();
+
     while(files.size())
     {
         delete(files.last());
@@ -582,30 +594,31 @@ void ShowPanel::downloadFile()
 
 
 
+        emit createDownloadItem(o);
 
 
-        qDebug() << "create download";
-        Obj_Transfer* tmp = new Obj_Transfer(true, o->objfile);
-        if(tmp->openFile())
-        {
-            QNetworkReply* reply = this->DownloadFile(o->obj->id);
-            reply->setReadBufferSize(40960);
-            tmp->setReply(reply);
+//        qDebug() << "create download";
+//        Obj_Transfer* tmp = new Obj_Transfer(true, o->objfile);
+//        if(tmp->openFile())
+//        {
+//            QNetworkReply* reply = this->DownloadFile(o->obj->id);
+//            reply->setReadBufferSize(40960);
+//            tmp->setReply(reply);
 
-            connect(reply, SIGNAL(downloadProgress(qint64, qint64)), tmp, SLOT(downloadProgress(qint64, qint64)));
-            connect(reply, QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error), tmp, &Obj_Transfer::error);
-            connect(reply, SIGNAL(finished()), tmp, SLOT(finished()));
-            connect(reply, SIGNAL(readyRead()), tmp, SLOT(readyRead()));
-            connect(tmp, SIGNAL(updateView()), this, SLOT(requestUpdateView()));
-//            connect(this, SIGNAL(updateView()), tmp, SLOT(readData()));
+//            connect(reply, SIGNAL(downloadProgress(qint64, qint64)), tmp, SLOT(downloadProgress(qint64, qint64)));
+//            connect(reply, QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error), tmp, &Obj_Transfer::error);
+//            connect(reply, SIGNAL(finished()), tmp, SLOT(finished()));
+//            connect(reply, SIGNAL(readyRead()), tmp, SLOT(readyRead()));
+//            connect(tmp, SIGNAL(updateView()), this, SLOT(requestUpdateView()));
+////            connect(this, SIGNAL(updateView()), tmp, SLOT(readData()));
 
-            emit addDownloadFile(tmp);
-        }
-        else
-        {
-            qDebug() << "Open File Error!";
-            tmp->deleteLater();
-        }
+//            emit addDownloadFile(tmp);
+//        }
+//        else
+//        {
+//            qDebug() << "Open File Error!";
+//            tmp->deleteLater();
+//        }
 
 
 
@@ -684,6 +697,22 @@ void ShowPanel::requestUpdateView()
         lastTime = tmp;
         emit updateView();
     }
+}
+
+void ShowPanel::createDownloadTask(obj_frame* o, Obj_Transfer* tmp)
+{
+    QNetworkReply* reply = this->DownloadFile(o->obj->id);
+    reply->setReadBufferSize(40960);
+    tmp->setReply(reply);
+
+    connect(reply, SIGNAL(downloadProgress(qint64, qint64)), tmp, SLOT(downloadProgress(qint64, qint64)));
+    connect(reply, QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error), tmp, &Obj_Transfer::error);
+    connect(reply, SIGNAL(finished()), tmp, SLOT(finished()));
+    connect(reply, SIGNAL(readyRead()), tmp, SLOT(readyRead()));
+    connect(tmp, SIGNAL(updateView()), this, SLOT(requestUpdateView()));
+    //            connect(this, SIGNAL(updateView()), tmp, SLOT(readData()));
+
+    emit addDownloadFile(tmp);
 }
 
 void ShowPanel::addNewFolder()

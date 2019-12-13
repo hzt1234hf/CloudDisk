@@ -39,7 +39,6 @@ public:
 private:
     bool isRunningWork = false;
 
-    QNetworkReply* DownloadFile(long fileid);
 
 public slots:
     void readDownloadData();
@@ -47,10 +46,11 @@ public slots:
     void stopWork();
     void startWork();
 
-    void createDownloadTask(obj_frame*);
+    void createDownloadItem(obj_frame*);
 
 signals:
     void addDownloadItem(Obj_Transfer*);
+    void createDownloadTask(obj_frame*, Obj_Transfer*);
 };
 
 class ShowPanel : public QWidget
@@ -136,7 +136,8 @@ signals:
     void enableUpperbtn(bool);
     void enableObjbtn(bool);
     void addDownloadFile(Obj_Transfer*);
-    void createDownloadTask(obj_frame*);
+
+    void createDownloadItem(obj_frame*);
 
     void updateView();
 
@@ -160,6 +161,8 @@ public slots:
     void deleteObj();
 
     void requestUpdateView();
+
+    void createDownloadTask(obj_frame*, Obj_Transfer*);
 
 protected:
     void mousePressEvent(QMouseEvent* event) override;

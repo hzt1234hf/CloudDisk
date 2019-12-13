@@ -42,6 +42,7 @@ private:
 
 public slots:
     void requestCallback(QNetworkReply* reply);
+
 };
 
 #endif // SERVERCONNECT_H
