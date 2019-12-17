@@ -7,31 +7,72 @@ CloudDiskWindow::CloudDiskWindow(QWidget* parent) :
 {
     ui->setupUi(this);
 
-    downloadItemModel = new TransferItem(this);
-    uploadItemModel = new TransferItem(this);
+
+    // 创建下载线程
+    downloadThreadWorker = new DownloadThreadWorker();
+    downloadThreadWorker->moveToThread(&downloadThread);
+
+    // 线程操作相关信号槽
+    connect(this, &CloudDiskWindow::runDownloadThread, downloadThreadWorker, &DownloadThreadWorker::continuousReadData);
+    connect(this, &CloudDiskWindow::startDownloadThread, downloadThreadWorker, &DownloadThreadWorker::startWork);
+    connect(this, &CloudDiskWindow::stopDownloadThread, downloadThreadWorker, &DownloadThreadWorker::stopWork);
+    connect(&downloadThread, &QThread::finished, downloadThreadWorker, &QObject::deleteLater);
+
+    // 线程中运行的函数相关信号槽
+    connect(ui->show_panel, &ShowPanel::createDownloadItem, downloadThreadWorker, &DownloadThreadWorker::createDownloadItem);
+    connect(downloadThreadWorker, &DownloadThreadWorker::createDownloadTask, ui->show_panel, &ShowPanel::createDownloadTask);
+    connect(downloadThreadWorker, &DownloadThreadWorker::readData, [ = ] {updateDownloadView();});
+    connect(downloadThreadWorker, &DownloadThreadWorker::createDownloadTask, this, &CloudDiskWindow::updateDownloadView);
+    downloadThread.start();
+    emit runDownloadThread();
+
+    // 创建下载界面的Model和View
+    downloadItemModel = new TransferItem(downloadThreadWorker->getData(), this);
     downloadDelegate = new TransferItemProcessingDelegate(this);
-    uploadDelegate = new TransferItemProcessingDelegate(this);
-
+    // 设置下载界面属性
     ui->tableView_download->setModel(downloadItemModel);
-    ui->tableView_upload->setModel(uploadItemModel);
-//    ui->tableView_finished->setModel(transferItemModel);
-
-
-
     ui->tableView_download->setItemDelegate(downloadDelegate);
-    ui->tableView_upload->setItemDelegate(uploadDelegate);
 
-    Obj_Transfer* test = new Obj_Transfer(false, new Obj_File(nullptr, 4, "33333", 1, QDate()), nullptr,  100);
-    test->setReceivedSize(39);
-    uploadItemModel->addData(test);
-    uploadItemModel->addData(new Obj_Transfer(false, new Obj_File(nullptr, 3, "8hrht", 1, QDate()), nullptr,  150));
-
-
+    // 设置下载界面比例
     ui->tableView_download->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     ui->tableView_download->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     ui->tableView_download->resizeColumnsToContents();
     ui->tableView_download->setMouseTracking(true);
 
+    // 下载界面操作
+//    connect(ui->show_panel, SIGNAL(addDownloadFile(Obj_Transfer*)), downloadItemModel, SLOT(addData(Obj_Transfer*)));
+//    connect(ui->show_panel, SIGNAL(addDownloadFile(Obj_Transfer*)), this, SLOT(updateDownloadView()));
+    connect(downloadThreadWorker, &DownloadThreadWorker::updateView, downloadItemModel, &TransferItem::update);
+    connect(downloadThreadWorker, &DownloadThreadWorker::createDownloadTask, downloadItemModel, &TransferItem::update);
+    connect(downloadDelegate, &TransferItemProcessingDelegate::signals1, downloadThreadWorker, &DownloadThreadWorker::switchDownloadTaskStatus);
+    connect(downloadDelegate, &TransferItemProcessingDelegate::signals2, downloadThreadWorker, &DownloadThreadWorker::deleteDownloadTask);
+    connect(downloadDelegate, &TransferItemProcessingDelegate::signals3, downloadThreadWorker, &DownloadThreadWorker::openDownloadFileDir);
+
+
+
+
+
+
+
+    // 创建上传线程
+    uploadThreadWorker = new UploadThreadWorker();
+    uploadThreadWorker->moveToThread(&uploadThread);
+
+    // 创建上传界面的Model和View
+    uploadItemModel = new TransferItem(uploadThreadWorker->getData(), this);
+    uploadDelegate = new TransferItemProcessingDelegate(this);
+
+    // 设置上传界面属性
+    ui->tableView_upload->setModel(uploadItemModel);
+    ui->tableView_upload->setItemDelegate(uploadDelegate);
+
+    // 测试上传界面
+    Obj_Transfer* test = new Obj_Transfer(false, new Obj_File(nullptr, 4, "33333", 1, QDate()), nullptr,  100);
+    test->setReceivedSize(39);
+    uploadItemModel->addData(test);
+    uploadItemModel->addData(new Obj_Transfer(false, new Obj_File(nullptr, 3, "8hrht", 1, QDate()), nullptr,  150));
+
+    // 设置上传界面比例
     ui->tableView_upload->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     ui->tableView_upload->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     ui->tableView_upload->resizeColumnsToContents();
@@ -40,10 +81,8 @@ CloudDiskWindow::CloudDiskWindow(QWidget* parent) :
 
 
 
-    connect(ui->show_panel, SIGNAL(addDownloadFile(Obj_Transfer*)), downloadItemModel, SLOT(addData(Obj_Transfer*)));
-//    connect(ui->show_panel->downloadThreadWorker, SIGNAL(addDownloadItem(Obj_Transfer*)), downloadItemModel, SLOT(addData(Obj_Transfer*)));
-    connect(ui->show_panel, SIGNAL(updateView()), this, SLOT(updateDownloadView()));
-    connect(ui->show_panel, SIGNAL(addDownloadFile(Obj_Transfer*)), this, SLOT(updateDownloadView()));
+
+
 
 
     connect(ui->action_upload, SIGNAL(triggered()), ui->show_panel, SLOT(add()));
@@ -84,6 +123,8 @@ CloudDiskWindow::CloudDiskWindow(QWidget* parent) :
 
 CloudDiskWindow::~CloudDiskWindow()
 {
+    downloadThread.quit();
+    downloadThread.wait();
     delete ui;
 }
 
@@ -101,7 +142,6 @@ void CloudDiskWindow::enableObjBtn(bool flag)
 
 void CloudDiskWindow::updateDownloadView()
 {
-    qDebug() << "3333333333333333";
     ui->tableView_download->resizeColumnsToContents();
     ui->tableView_download->resizeRowsToContents();
 }

@@ -10,6 +10,7 @@
 #include <QMouseEvent>
 #include <QProgressBar>
 #include <QToolTip>
+#include <QMessageBox>
 
 #include "transferitem.h"
 
@@ -34,6 +35,7 @@ public:
     ItemButton(QString iconName);
     void paintButton(QPainter* painter, const QStyleOptionViewItem& option, const QPoint& pos );
 
+    void changeStyleSheet(QString iconName);
     void inline setStatusNone();
     void inline setStatusHover();
     void inline setStatusPressed();
@@ -78,6 +80,11 @@ private:
     QScopedPointer<ItemButton> itemButton3;
     QScopedPointer<ItemProgressBar> itemProgressBar;
     QPoint mousePos;
+
+signals:
+    void signals1( const QModelIndex& index);
+    void signals2( const QModelIndex& index);
+    void signals3( const QModelIndex& index);
 
 };
 

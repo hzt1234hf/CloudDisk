@@ -1,25 +1,20 @@
+import base64
+import datetime
 import hashlib
 import os
 import random
 import shutil
-import datetime
-import base64
 import time
-import threading
-
-from Crypto.Cipher import AES  # 安装依赖pycryptodome，不是Crypto
-from Crypto.Util import Counter
-import peewee
-from flask import Flask, jsonify, request, send_file
-from peewee import *
-from itsdangerous import (TimedJSONWebSignatureSerializer as URLSafeSerializer, BadSignature, SignatureExpired)
 from functools import wraps
-from flask_cors import CORS, cross_origin
-from playhouse.shortcuts import model_to_dict, dict_to_model
-import asyncio
 
-from watchdog.observers import Observer
+import peewee
+from Crypto.Cipher import AES  # 安装依赖pycryptodome，不是Crypto
+from flask import Flask, jsonify, request, send_file
+from flask_cors import CORS
+from itsdangerous import (TimedJSONWebSignatureSerializer as URLSafeSerializer, BadSignature, SignatureExpired)
+from playhouse.shortcuts import model_to_dict
 from watchdog.events import *
+from watchdog.observers import Observer
 from watchdog.utils.dirsnapshot import DirectorySnapshot, DirectorySnapshotDiff
 
 from DAO import *
@@ -407,7 +402,7 @@ def files(file_id):
         if 'query' in args and args['query'] == 'info':
             return jsonify(message='OK', data=model_to_dict(file), actual_path=actual_path)
         if os.path.exists(target_file):
-            return send_file(target_file, as_attachment=True, attachment_filename=file.name)
+            return send_file(target_file, as_attachment=True, conditional=True, attachment_filename=file.name)
         else:
             return jsonify(message='error'), 404
     elif request.method == 'DELETE':

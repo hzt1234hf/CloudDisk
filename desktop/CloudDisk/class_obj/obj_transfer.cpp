@@ -3,7 +3,7 @@
 
 Obj_Transfer::Obj_Transfer()
 {
-    start();
+
 }
 
 Obj_Transfer::Obj_Transfer(bool isDownload, Obj_File* obj, QNetworkReply* reply, double totalSize): Obj_Transfer()
@@ -17,15 +17,18 @@ Obj_Transfer::Obj_Transfer(bool isDownload, Obj_File* obj, QNetworkReply* reply,
 
 bool Obj_Transfer::openFile()
 {
-    file = new QSaveFile(obj->name, this);
-    return file->open(QSaveFile::WriteOnly);
-
     QFileInfo f(obj->name);
     if(f.exists() == true)
     {
-        if(file)
+        if(curStatus != FINISHED)
         {
-            file->deleteLater();
+            file = new QFile(obj->name + ".tmp");
+            return file->open(QIODevice::WriteOnly | QIODevice::Append);
+        }
+        else if(file)
+        {
+            file->close();
+//            file->deleteLater();
             file = nullptr;
         }
         return false;
@@ -34,21 +37,44 @@ bool Obj_Transfer::openFile()
     {
         if(file == nullptr)
         {
-            file = new QSaveFile(obj->name);
+            file = new QFile(obj->name + ".tmp");
         }
-        return file->open(QSaveFile::WriteOnly);
+        return file->open(QIODevice::WriteOnly | QIODevice::Append);
     }
 }
 
 void Obj_Transfer::start()
 {
-    timer.start();
-    isTransmitting = true;
+    if(curStatus == NONE)
+    {
+        curStatus = IS_TRANSMITTING;
+    }
+    else if(curStatus == STOPPED)
+    {
+        isBreadpointResume = true;
+        curStatus = IS_TRANSMITTING;
+    }
 }
 
 void Obj_Transfer::stop()
 {
-    isTransmitting = false;
+    if(curStatus == IS_TRANSMITTING )
+    {
+        reply->abort();
+        curStatus = IS_PAUSING;
+    }
+}
+
+void Obj_Transfer::deleteTask()
+{
+    if(reply)
+        reply->abort();
+    curStatus = IS_DELETTING;
+}
+
+Obj_File* Obj_Transfer::getObj()
+{
+    return obj;
 }
 
 QString Obj_Transfer::objName() const
@@ -121,6 +147,8 @@ QString Obj_Transfer::objTransferSpeed() const
 
 int Obj_Transfer::objTransferRate() const
 {
+    if(totalSize < 0.01)
+        return 0;
     return (double)receivedSize * 10 / totalSize * 10;
 }
 
@@ -131,17 +159,27 @@ bool Obj_Transfer::objIsDownload() const
 
 bool Obj_Transfer::objIsFinished() const
 {
-    return isFinished;
+    return curStatus == FINISHED;
 }
 
 bool Obj_Transfer::objIsTransmitting() const
 {
-    return isTransmitting;
+    return curStatus == IS_TRANSMITTING;
 }
 
-void Obj_Transfer::setTransferSpeed(qint64 transferBytes, int interval)
+bool Obj_Transfer::objIsStopped() const
 {
-    qDebug() << transferBytes << "   " << interval;
+    return curStatus == STOPPED;
+}
+
+qint64 Obj_Transfer::objReceivedSize() const
+{
+    return receivedSize;
+}
+
+void Obj_Transfer::setTransferSpeed(int interval)
+{
+    qint64 transferBytes = totalSize - curTotalSize + lastReceivedSize - receivedSize;
     transferSpeed = transferBytes * 1000.0 / interval;
     if(transferSpeed > 1073741824.0)
         fileTransferSpeedUnit = GB;
@@ -168,7 +206,7 @@ void Obj_Transfer::setTotalSize(qint64 size)
 
 void Obj_Transfer::setReceivedSize(qint64 size)
 {
-    this->receivedSize = size;
+    this->receivedSize = size + totalSize - curTotalSize;
 //    fileReceivedSizeUint = B;
 //    if(receivedSize > 1024)
 //    {
@@ -194,12 +232,12 @@ void Obj_Transfer::appendReceivedSize(qint64 size)
 
 void Obj_Transfer::setFinished(bool is_finish)
 {
-    this->isFinished = is_finish;
+    this->curStatus = IS_FINISHING;
 }
 
 void Obj_Transfer::setTransmitting(bool is_trans)
 {
-    this->isTransmitting = is_trans;
+    this->curStatus = IS_TRANSMITTING;
 }
 
 void Obj_Transfer::setReply(QNetworkReply* reply)
@@ -207,65 +245,113 @@ void Obj_Transfer::setReply(QNetworkReply* reply)
     this->reply = reply;
 }
 
+
+
+
+
 void Obj_Transfer::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
 {
-    qDebug() << QThread::currentThreadId();
     lastReceivedSize = bytesReceived;
-    if(totalSize <= 0 || bytesTotal != totalSize)
+    if(isBreadpointResume == false && (totalSize <= 0 || bytesTotal != totalSize))
     {
         this->setTotalSize(bytesTotal);
-        emit updateView();
     }
-    int curTime = timer.elapsed();
-    if(curTime - lastTime >= TimeInterval)
-    {
-
-        this->setTransferSpeed(lastReceivedSize - receivedSize, curTime - lastTime);
-        this->setReceivedSize(lastReceivedSize);
-        lastTime = curTime; // 重设时间
-
-        emit updateView();
-    }
+    if(curTotalSize <= 0 || bytesTotal != curTotalSize)
+        curTotalSize = bytesTotal;
 }
 
 void Obj_Transfer::error(QNetworkReply::NetworkError code)
 {
-    qDebug() << code;
-    file->commit();
-//    reply->deleteLater();
-//    file->deleteLater();
+    qDebug() << "error:   " << code;
+    curStatus = HAS_ERROR;
 }
 
 void Obj_Transfer::finished()
 {
-    qDebug() << "finished.";
-
-    this->setTransferSpeed(totalSize - receivedSize, timer.elapsed() - lastTime);
-    this->setReceivedSize(totalSize);
-
-    emit updateView();
-    file->commit();
-    reply->deleteLater();
-    file->deleteLater();
-
-    reply = nullptr;
-    file = nullptr;
+    if(curStatus != IS_PAUSING && curStatus != STOPPED)
+    {
+        curStatus = IS_FINISHING;
+    }
 }
 
 void Obj_Transfer::readyRead()
 {
-    while(timer.elapsed() - lastTime <= TimeInterval);
-    qDebug() << file;
-    file->write(reply->readAll());
-//    dataIsReady = true;
+    dataIsReady = true;
 }
 
-
-void Obj_Transfer::readData()
+void Obj_Transfer::readData(QTime* time)
 {
-    if(dataIsReady)
+    switch(curStatus)
     {
-        file->write(reply->readAll());
+
+        case IS_FINISHING:
+        case IS_TRANSMITTING:
+            {
+                if(dataIsReady)
+                {
+                    dataIsReady = false;
+                    file->write(reply->readAll());
+                    file->flush();
+
+                    this->setTransferSpeed(time->elapsed() - lastTime);
+                    this->setReceivedSize(lastReceivedSize);
+                    lastTime = time->elapsed();
+                }
+                if(curStatus == IS_FINISHING)
+                {
+                    curStatus = FINISHED;
+                }
+            }
+            break;
+
+        case IS_DELETTING:
+        case IS_PAUSING:
+        case HAS_ERROR:
+        case FINISHED:
+            {
+                if(curStatus == FINISHED)
+                {
+                    curStatus = STOPPED;
+                    file->rename(obj->name);
+                }
+                if(file)
+                {
+                    file->close();
+//                    file->deleteLater();
+                    file = nullptr;
+                }
+                if(reply)
+                {
+                    reply->deleteLater();
+                    reply = nullptr;
+                }
+
+                if(curStatus == HAS_ERROR)
+                {
+                }
+                else if(curStatus == IS_PAUSING)
+                {
+                    curStatus = STOPPED;
+                }
+                else if(curStatus == IS_DELETTING)
+                {
+                    this->deleteLater();
+                    curStatus = DELETED;
+                }
+            }
+            break;
+        case DELETED:
+        case STOPPED:
+            {
+
+            } break;
+        case NONE:
+        default:
+            {
+                qDebug() << "Unknow Status!";
+            }
+            break;
     }
-    dataIsReady = false;
+
+    emit updateView();
 }

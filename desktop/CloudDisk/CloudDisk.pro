@@ -34,6 +34,8 @@ SOURCES += \
         class_obj/transferitem.cpp \
         class_obj/transferitemprocessingdelegate.cpp \
         class_obj/transferpanel.cpp \
+        class_thread/downloadthreadworker.cpp \
+        class_thread/uploadthreadworker.cpp \
         login.cpp \
         main.cpp \
         clouddiskwindow.cpp \
@@ -41,6 +43,7 @@ SOURCES += \
 
 HEADERS += \
         class_obj/comdef.h \
+        class_obj/downloadthreadworker.h \
         class_obj/obj_base.h \
         class_obj/obj_file.h \
         class_obj/obj_folder.h \
@@ -50,6 +53,9 @@ HEADERS += \
         class_obj/transferitem.h \
         class_obj/transferitemprocessingdelegate.h \
         class_obj/transferpanel.h \
+        class_obj/uploadthreadworker.h \
+        class_thread/downloadthreadworker.h \
+        class_thread/uploadthreadworker.h \
         clouddiskwindow.h \
         login.h \
         serverconnect.h

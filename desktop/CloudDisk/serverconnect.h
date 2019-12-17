@@ -37,6 +37,8 @@ public:
     QNetworkReply* http_delete(QString url);
     QNetworkReply* http_patch(QString url, QJsonDocument jsonData);
 
+    QNetworkReply* http_get_download(QString url, bool isBreakpointResumeModel, qint64 breakpoint);
+
 private:
     void CreateConnect();
 

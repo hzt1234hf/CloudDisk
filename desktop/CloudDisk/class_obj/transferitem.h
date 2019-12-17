@@ -12,7 +12,7 @@ class TransferItem : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit TransferItem(QObject* parent = nullptr);
+    explicit TransferItem(QList<Obj_Transfer*>& m_datum, QObject* parent = nullptr);
 
     // Header:
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
@@ -37,10 +37,11 @@ public:
     };
 public slots:
     void addData(Obj_Transfer*);
+    void update();
 
 private:
 
-    QList<Obj_Transfer*> m_datum;
+    QList<Obj_Transfer*>& m_datum;
 };
 
 #endif // TRANSFERITEM_H

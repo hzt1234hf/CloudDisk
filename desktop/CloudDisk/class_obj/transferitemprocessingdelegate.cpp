@@ -60,7 +60,10 @@ void TransferItemProcessingDelegate::paint(QPainter* painter, const QStyleOption
 
                 if (option.state & QStyle::State_Selected)
                     painter->fillRect(option.rect, option.palette.highlight());
-
+                if(index.data().toBool())
+                    itemButton1->changeStyleSheet("pause");
+                else
+                    itemButton1->changeStyleSheet("play");
                 itemButton1->paintButton(painter, option, mousePos);
             }
             break;
@@ -177,16 +180,20 @@ bool TransferItemProcessingDelegate::editorEvent(QEvent* event, QAbstractItemMod
                         case TransferItem::OperatorRole_1:// 4
                             {
                                 itemButton1->setStatusReleased();
+                                emit signals1(index);
                             }
                             break;
                         case TransferItem::OperatorRole_2:// 5
                             {
                                 itemButton2->setStatusReleased();
+                                if(QMessageBox::Yes == QMessageBox::question(nullptr, tr("询问"), tr("是否删除文件？")))
+                                    emit signals2(index);
                             }
                             break;
                         case TransferItem::OperatorRole_3:// 6
                             {
                                 itemButton3->setStatusReleased();
+                                emit signals3(index);
                             }
                             break;
                     }
@@ -280,7 +287,28 @@ void ItemButton::paintButton(QPainter* painter, const QStyleOptionViewItem& opti
     }
 //    QApplication::style()->drawControl(QStyle::CE_PushButton, &buttonOption, painter, button1.data());
     option.widget->style()->drawControl(QStyle::CE_PushButton, &buttonOption, painter, buttonWidget.data());
-//    button1.data()->style()->drawControl(QStyle::CE_PushButton, &buttonOption, painter, button1.data());
+    //    button1.data()->style()->drawControl(QStyle::CE_PushButton, &buttonOption, painter, button1.data());
+}
+
+void ItemButton::changeStyleSheet(QString iconName)
+{
+    if(iconName != buttonIconName)
+    {
+        buttonIconName = iconName;
+        buttonWidget->setStyleSheet("\
+                            QPushButton{\
+                                border: none;\
+                                background-color: transparent;\
+                                image: url(:/control/icon/control/" + iconName + ".png);\
+                            }\
+                            QPushButton:hover {\
+                                image: url(:/control/icon/control/" + iconName + "-hover.png);\
+                            }\
+                            QPushButton:pressed {\
+                                image: url(:/control/icon/control/" + iconName + "-pressed.png);\
+                            }\
+                          ");
+    }
 }
 
 void ItemButton::setStatusNone()
@@ -325,6 +353,7 @@ ItemProgressBar::ItemProgressBar(): progressBarWidget(new QProgressBar())
 
 void ItemProgressBar::paintQProgressBar(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index)
 {
+
 
     double progress = index.data().toInt();
 

@@ -112,3 +112,16 @@ QNetworkReply* ServerConnect::http_patch(QString url, QJsonDocument jsonData)
     QNetworkReply* reply = accessManager->sendCustomRequest(request, QByteArray("PATCH"), jsonData.toJson());
     return reply;
 }
+
+QNetworkReply* ServerConnect::http_get_download(QString url, bool isBreakpointResumeModel, qint64 breakpoint)
+{
+    QNetworkRequest request;
+    if(isBreakpointResumeModel)
+    {
+        QString strRange = QString("bytes=%1-").arg(breakpoint);
+        request.setRawHeader("Range", strRange.toLatin1());
+    }
+    request.setUrl(QUrl(ServerConnect::address + url));
+    QNetworkReply* reply = accessManager->get(request);
+    return reply;
+}

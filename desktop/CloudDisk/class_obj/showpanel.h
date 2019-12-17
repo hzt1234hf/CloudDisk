@@ -10,6 +10,8 @@
 #include <QHttpMultiPart>
 #include <QHttpPart>
 
+#include <QTime>
+#include <QTimer>
 #include <QThread>
 #include <QQueue>
 #include <QSaveFile>
@@ -30,28 +32,7 @@
 #include "obj_transfer.h"
 
 
-class DownloadThreadWorker: public QObject
-{
-    Q_OBJECT
 
-public:
-
-private:
-    bool isRunningWork = false;
-
-
-public slots:
-    void readDownloadData();
-
-    void stopWork();
-    void startWork();
-
-    void createDownloadItem(obj_frame*);
-
-signals:
-    void addDownloadItem(Obj_Transfer*);
-    void createDownloadTask(obj_frame*, Obj_Transfer*);
-};
 
 class ShowPanel : public QWidget
 {
@@ -61,7 +42,7 @@ public:
     static constexpr int gap = 10;
     QMenu* objToolPalette;
     QMenu* panelToolPalette;
-    DownloadThreadWorker* downloadThreadWorker;// 线程
+
 
 private:
     QVector<obj_frame*> files;
@@ -72,7 +53,6 @@ private:
     int lastWidth = 0, lastHeight = 0;
     int curCount_MaxRowObj = 0;
 
-    QThread downloadThread;
 
 
 
@@ -124,7 +104,7 @@ private:
     void UploadFile(QString);
     QNetworkReply* GetFile(long id);
     void DeleteFile(long fileid);
-    QNetworkReply* DownloadFile(long fileid);   // 未编写-over
+    QNetworkReply* DownloadFile(long fileid, Obj_Transfer* tmp);   // 未编写-over
     void SetObjShared(bool isFile, long objId, bool isShared, bool isShareEncryped);
     void GetShareObjInfo(QString path);
     void DownloadShareObj();    // 未编写
@@ -137,9 +117,7 @@ signals:
     void enableObjbtn(bool);
     void addDownloadFile(Obj_Transfer*);
 
-    void createDownloadItem(obj_frame*);
-
-    void updateView();
+    void createDownloadItem(Obj_File*);
 
 public slots:
     void add();
@@ -160,9 +138,7 @@ public slots:
     void addNewFolder();
     void deleteObj();
 
-    void requestUpdateView();
-
-    void createDownloadTask(obj_frame*, Obj_Transfer*);
+    void createDownloadTask(Obj_File*, Obj_Transfer*);
 
 protected:
     void mousePressEvent(QMouseEvent* event) override;

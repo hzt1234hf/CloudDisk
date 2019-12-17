@@ -1,66 +1,5 @@
 ﻿#include "showpanel.h"
 
-void DownloadThreadWorker::readDownloadData()
-{
-    for(;;)
-    {
-        if(isRunningWork)
-        {
-            QElapsedTimer t;
-            t.start();
-            while(t.elapsed() < 1000);
-        }
-    }
-}
-
-
-void DownloadThreadWorker::stopWork()
-{
-    isRunningWork = false;
-}
-
-void DownloadThreadWorker::startWork()
-{
-    isRunningWork = true;
-}
-
-//void DownloadThreadWorker::createDownloadTask(obj_frame* obj)
-//{
-//    Obj_Transfer* tmp = new Obj_Transfer(true, obj->objfile);
-//    if(tmp->openFile())
-//    {
-//        QNetworkReply* reply = this->DownloadFile(obj->obj->id);
-//        reply->setReadBufferSize(40960);
-//        tmp->setReply(reply);
-
-//        connect(reply, SIGNAL(downloadProgress(qint64, qint64)), tmp, SLOT(downloadProgress(qint64, qint64)));
-//        connect(reply, QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error), tmp, &Obj_Transfer::error);
-//        connect(reply, SIGNAL(finished()), tmp, SLOT(finished()));
-//        connect(reply, SIGNAL(readyRead()), tmp, SLOT(readyRead()));
-//        connect(tmp, SIGNAL(updateView()), this, SLOT(requestUpdateView()));
-
-//        qDebug() << "Create Download Task.";
-//        emit addDownloadItem(tmp);
-//    }
-//    else
-//    {
-//        qDebug() << "Open File Error!";
-//        tmp->deleteLater();
-//    }
-//}
-
-void DownloadThreadWorker::createDownloadItem(obj_frame* obj)
-{
-    Obj_Transfer* tmp =  new Obj_Transfer(true, obj->objfile);
-    if(tmp->openFile())
-    {
-        emit createDownloadTask(obj, tmp);
-    }
-    else
-    {
-        tmp->deleteLater();
-    }
-}
 
 
 ShowPanel::ShowPanel(QWidget* parent) : QWidget(parent)
@@ -68,12 +7,6 @@ ShowPanel::ShowPanel(QWidget* parent) : QWidget(parent)
     objToolPalette = new QMenu(this);
     panelToolPalette = new QMenu(this);
 
-    downloadThreadWorker = new DownloadThreadWorker();
-    downloadThreadWorker->moveToThread(&downloadThread);
-    connect(&downloadThread, &QThread::finished, downloadThreadWorker, &QObject::deleteLater);
-    connect(this, &ShowPanel::createDownloadItem, downloadThreadWorker, &DownloadThreadWorker::createDownloadItem);
-    connect(downloadThreadWorker, &DownloadThreadWorker::createDownloadTask, this, &ShowPanel::createDownloadTask);
-    downloadThread.start();
 
 //    objToolPalette->
     this->setStyleSheet("QWidget#show_panel{\
@@ -88,8 +21,6 @@ ShowPanel::ShowPanel(QWidget* parent) : QWidget(parent)
 
 ShowPanel::~ShowPanel()
 {
-    downloadThread.quit();
-    downloadThread.wait();
 
     while(files.size())
     {
@@ -305,9 +236,19 @@ void ShowPanel::DeleteFile(long fileid)
     QNetworkReply* reply = ServerConnect::getInstance().http_delete("/files/" + QString::number(fileid));
     replyMap.insert(reply, requestType::DELETE_FILE);
 }
-QNetworkReply* ShowPanel::DownloadFile(long fileid)
+
+QNetworkReply* ShowPanel::DownloadFile(long fileid, Obj_Transfer* tmp)
 {
-    QNetworkReply* reply = ServerConnect::getInstance().http_get("/files/" + QString::number(fileid));
+    QNetworkReply* reply;
+    if(tmp->objIsStopped())
+    {
+        qDebug() << "----------retrans--------";
+        reply = ServerConnect::getInstance().http_get_download("/files/" + QString::number(fileid), true, tmp->objReceivedSize());
+    }
+    else
+    {
+        reply = ServerConnect::getInstance().http_get_download("/files/" + QString::number(fileid), false, 0);
+    }
 //    replyMap.insert(reply, requestType::DOWNLOAD_FILE);
     return reply;
 }
@@ -594,7 +535,7 @@ void ShowPanel::downloadFile()
 
 
 
-        emit createDownloadItem(o);
+        emit createDownloadItem(o->objfile);
 
 
 //        qDebug() << "create download";
@@ -689,19 +630,9 @@ void ShowPanel::deleteObj()
     }
 }
 
-void ShowPanel::requestUpdateView()
+void ShowPanel::createDownloadTask(Obj_File* obj, Obj_Transfer* tmp)
 {
-    int tmp = timer.elapsed();
-    if(tmp - lastTime > TimeInterval)
-    {
-        lastTime = tmp;
-        emit updateView();
-    }
-}
-
-void ShowPanel::createDownloadTask(obj_frame* o, Obj_Transfer* tmp)
-{
-    QNetworkReply* reply = this->DownloadFile(o->obj->id);
+    QNetworkReply* reply = this->DownloadFile(obj->id, tmp);
     reply->setReadBufferSize(40960);
     tmp->setReply(reply);
 
@@ -709,10 +640,10 @@ void ShowPanel::createDownloadTask(obj_frame* o, Obj_Transfer* tmp)
     connect(reply, QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error), tmp, &Obj_Transfer::error);
     connect(reply, SIGNAL(finished()), tmp, SLOT(finished()));
     connect(reply, SIGNAL(readyRead()), tmp, SLOT(readyRead()));
-    connect(tmp, SIGNAL(updateView()), this, SLOT(requestUpdateView()));
-    //            connect(this, SIGNAL(updateView()), tmp, SLOT(readData()));
+    tmp->start();
 
-    emit addDownloadFile(tmp);
+
+//    emit addDownloadFile(tmp);
 }
 
 void ShowPanel::addNewFolder()
@@ -725,11 +656,11 @@ void ShowPanel::addNewFolder()
         AddFolder(text, curFolderId);
 }
 
-
 void ShowPanel::mousePressEvent(QMouseEvent* event)
 {
     this->resetSelected();
 }
+
 void ShowPanel::keyReleaseEvent(QKeyEvent* event)
 {
     if(event->key() == Qt::Key_Control)

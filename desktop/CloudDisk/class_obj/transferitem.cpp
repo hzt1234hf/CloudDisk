@@ -1,7 +1,7 @@
 #include "transferitem.h"
 
-TransferItem::TransferItem(QObject* parent)
-    : QAbstractTableModel(parent)
+TransferItem::TransferItem(QList<Obj_Transfer*>& d, QObject* parent): m_datum(d)
+    , QAbstractTableModel(parent)
 {
 
 }
@@ -61,7 +61,7 @@ QVariant TransferItem::data(const QModelIndex& index, int role) const
                         break;
                     case InfoRole_1:    // 1 [已下载大小/]总大小
                         {
-                            if(m_datum[index.row()]->isFinished)
+                            if(m_datum[index.row()]->objIsFinished())
                                 return tr("总大小");
                             else if(m_datum[index.row()]->objIsDownload())
                                 return tr("已下载大小/总大小");
@@ -71,7 +71,7 @@ QVariant TransferItem::data(const QModelIndex& index, int role) const
                         break;
                     case InfoRole_2:    // 2 [下载速度]
                         {
-                            if(m_datum[index.row()]->isFinished)
+                            if(m_datum[index.row()]->objIsFinished())
                                 return "";
                             else
                                 return tr("下载速度");
@@ -79,7 +79,7 @@ QVariant TransferItem::data(const QModelIndex& index, int role) const
                         break;
                     case InfoRole_3:    // 3  下载进度
                         {
-                            if(m_datum[index.row()]->isFinished)
+                            if(m_datum[index.row()]->objIsFinished())
                                 if(m_datum[index.row()]->objIsDownload())
                                     return tr("下载完成");
                                 else
@@ -90,9 +90,9 @@ QVariant TransferItem::data(const QModelIndex& index, int role) const
                         break;
                     case OperatorRole_1:// 4
                         {
-                            if(m_datum[index.row()]->isFinished)
+                            if(m_datum[index.row()]->objIsFinished())
                                 return tr("打开文件");
-                            else if(m_datum[index.row()]->isTransmitting)
+                            else if(m_datum[index.row()]->objIsTransmitting())
                                 return tr("暂停");
                             else
                                 return tr("开始");
@@ -100,7 +100,7 @@ QVariant TransferItem::data(const QModelIndex& index, int role) const
                         break;
                     case OperatorRole_2:// 5
                         {
-                            if(m_datum[index.row()]->isFinished)
+                            if(m_datum[index.row()]->objIsFinished())
                                 return tr("打开所在文件夹");
                             else
                                 return tr("删除");
@@ -108,7 +108,7 @@ QVariant TransferItem::data(const QModelIndex& index, int role) const
                         break;
                     case OperatorRole_3:// 6
                         {
-                            if(m_datum[index.row()]->isFinished)
+                            if(m_datum[index.row()]->objIsFinished())
                                 return tr("删除");
                             else
                                 return tr("打开所在文件夹");
@@ -128,7 +128,7 @@ QVariant TransferItem::data(const QModelIndex& index, int role) const
                         break;
                     case InfoRole_1:    // 1 [(]已下载大小/]总大小
                         {
-                            if(m_datum[index.row()]->isFinished)
+                            if(m_datum[index.row()]->objIsFinished())
                                 return m_datum[index.row()]->objTotalSizeStr();
                             else
                                 return m_datum[index.row()]->objSizeScale();
@@ -136,19 +136,19 @@ QVariant TransferItem::data(const QModelIndex& index, int role) const
                         break;
                     case InfoRole_2:    // 2 [下载速度]
                         {
-                            if(m_datum[index.row()]->isFinished == false)
+                            if(m_datum[index.row()]->objIsFinished() == false)
                                 return m_datum[index.row()]->objTransferSpeed();
                         }
                         break;
                     case InfoRole_3:    // 3 下载进度
                         {
-                            if(m_datum[index.row()]->isFinished == false)
+                            if(m_datum[index.row()]->objIsFinished() == false)
                                 return m_datum[index.row()]->objTransferRate();
                         }
                         break;
                     case OperatorRole_1:// 4
                         {
-
+                            return m_datum[index.row()]->objIsTransmitting();
                         }
                         break;
                     case OperatorRole_2:// 5
@@ -181,8 +181,14 @@ Qt::ItemFlags TransferItem::flags(const QModelIndex& index) const
 
 void TransferItem::addData(Obj_Transfer* dataObj)
 {
-    qDebug() << "new new new";
+    qDebug() << "add Data";
     beginResetModel();
     m_datum.push_back(dataObj);
+    endResetModel();
+}
+
+void TransferItem::update()
+{
+    beginResetModel();
     endResetModel();
 }
