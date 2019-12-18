@@ -3,11 +3,15 @@
 
 #include <QMainWindow>
 #include <QHeaderView>
+
+
+#include "class_global/setting.h"
 #include "class_obj/transferitem.h"
 #include "class_obj/transferitemprocessingdelegate.h"
 #include "class_thread/downloadthreadworker.h"
 #include "class_thread/uploadthreadworker.h"
 
+#include "settingdialog.h"
 #include "login.h"
 
 namespace Ui
@@ -32,6 +36,9 @@ public:
 
 private:
     Ui::CloudDiskWindow* ui;
+    SettingDialog settingDialog;
+
+
     TransferItem* downloadItemModel;
     TransferItem* uploadItemModel;
     TransferItemProcessingDelegate* downloadDelegate;
@@ -47,6 +54,8 @@ protected slots:
     void updateDownloadView();
     void updateUploadloadView();
     void updateFinishedView();
+
+    void showSettingDialog();
 
 
 };

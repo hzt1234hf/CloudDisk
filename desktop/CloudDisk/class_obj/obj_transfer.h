@@ -9,6 +9,7 @@
 #include <QThread>
 
 #include "obj_file.h"
+#include "../class_global/setting.h"
 
 
 

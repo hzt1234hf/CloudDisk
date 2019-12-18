@@ -25,6 +25,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+        class_global/setting.cpp \
         class_obj/obj_base.cpp \
         class_obj/obj_file.cpp \
         class_obj/obj_folder.cpp \
@@ -39,9 +40,11 @@ SOURCES += \
         login.cpp \
         main.cpp \
         clouddiskwindow.cpp \
-        serverconnect.cpp
+        serverconnect.cpp \
+        settingdialog.cpp
 
 HEADERS += \
+        class_global/setting.h \
         class_obj/comdef.h \
         class_obj/downloadthreadworker.h \
         class_obj/obj_base.h \
@@ -58,11 +61,13 @@ HEADERS += \
         class_thread/uploadthreadworker.h \
         clouddiskwindow.h \
         login.h \
-        serverconnect.h
+        serverconnect.h \
+        settingdialog.h
 
 FORMS += \
         clouddiskwindow.ui \
-        login.ui
+        login.ui \
+        settingdialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

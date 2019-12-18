@@ -1,6 +1,5 @@
 #include "serverconnect.h"
 
-const QString ServerConnect::address = "http://127.0.0.1:5000";
 ServerConnect* ServerConnect::serverConnect = nullptr;
 QNetworkAccessManager* ServerConnect::accessManager = nullptr;
 
@@ -28,8 +27,6 @@ QNetworkAccessManager* ServerConnect::getNetworkAccessManager()
 {
     return accessManager;
 }
-
-
 
 void ServerConnect::CreateConnect()
 {
@@ -61,6 +58,7 @@ void ServerConnect::requestCallback(QNetworkReply* reply)
     }
     qDebug() << "--------------------------------------------------------------";
 }
+
 QNetworkReply* ServerConnect::http_get(QString url, QMap<QString, QString> param)
 {
     QNetworkRequest request;
@@ -75,16 +73,17 @@ QNetworkReply* ServerConnect::http_get(QString url, QMap<QString, QString> param
             data += '&' + iter.key() + '=' + iter.value();
     }
     if(data == "")
-        request.setUrl(QUrl(ServerConnect::address + url));
+        request.setUrl(QUrl(setting::GetInstance()->getServerAddress() + url));
     else
-        request.setUrl(QUrl(ServerConnect::address + url + '?' + data));
+        request.setUrl(QUrl(setting::GetInstance()->getServerAddress() + url + '?' + data));
     QNetworkReply* reply = accessManager->get(request);
     return reply;
 }
+
 QNetworkReply* ServerConnect::http_post(QString url, QJsonDocument jsonData)
 {
     QNetworkRequest request;
-    request.setUrl(QUrl(ServerConnect::address + url));
+    request.setUrl(QUrl(setting::GetInstance()->getServerAddress() + url));
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     QNetworkReply* reply = accessManager->post(request, jsonData.toJson());
     return reply;
@@ -93,7 +92,7 @@ QNetworkReply* ServerConnect::http_post(QString url, QJsonDocument jsonData)
 QNetworkReply* ServerConnect::http_post(QString url, QHttpMultiPart* multiPart)
 {
     QNetworkRequest request;
-    request.setUrl(QUrl(ServerConnect::address + url));
+    request.setUrl(QUrl(setting::GetInstance()->getServerAddress() + url));
     QNetworkReply* reply = accessManager->post(request, multiPart);
     return reply;
 }
@@ -101,14 +100,15 @@ QNetworkReply* ServerConnect::http_post(QString url, QHttpMultiPart* multiPart)
 QNetworkReply* ServerConnect::http_delete(QString url)
 {
     QNetworkRequest request;
-    request.setUrl(QUrl(ServerConnect::address + url));
+    request.setUrl(QUrl(setting::GetInstance()->getServerAddress() + url));
     QNetworkReply* reply = accessManager->deleteResource(request);
     return reply;
 }
+
 QNetworkReply* ServerConnect::http_patch(QString url, QJsonDocument jsonData)
 {
     QNetworkRequest request;
-    request.setUrl(QUrl(ServerConnect::address + url));
+    request.setUrl(QUrl(setting::GetInstance()->getServerAddress() + url));
     QNetworkReply* reply = accessManager->sendCustomRequest(request, QByteArray("PATCH"), jsonData.toJson());
     return reply;
 }
@@ -121,7 +121,8 @@ QNetworkReply* ServerConnect::http_get_download(QString url, bool isBreakpointRe
         QString strRange = QString("bytes=%1-").arg(breakpoint);
         request.setRawHeader("Range", strRange.toLatin1());
     }
-    request.setUrl(QUrl(ServerConnect::address + url));
+    request.setUrl(QUrl(setting::GetInstance()->getServerAddress() + url));
     QNetworkReply* reply = accessManager->get(request);
     return reply;
 }
+

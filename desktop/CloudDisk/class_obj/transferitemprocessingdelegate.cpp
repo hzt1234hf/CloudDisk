@@ -354,8 +354,14 @@ ItemProgressBar::ItemProgressBar(): progressBarWidget(new QProgressBar())
 void ItemProgressBar::paintQProgressBar(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index)
 {
 
-
-    double progress = index.data().toInt();
+    int data = index.data().toInt();
+    double progress;
+    if(data > 100)
+        progress = 100;
+    else if(data < 0)
+        progress = 0;
+    else
+        progress = data;
 
     QStyleOptionProgressBar progressBarOption;
     progressBarOption.initFrom(option.widget);

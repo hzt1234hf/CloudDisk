@@ -12,13 +12,14 @@
 #include <QAbstractNetworkCache>
 #include <QJsonDocument>
 
+#include "class_global/setting.h"
+
 class ServerConnect : QObject
 {
     Q_OBJECT
 public:
 
 private:
-    static const QString address;
     static ServerConnect* serverConnect;
     static QNetworkAccessManager* accessManager;
 

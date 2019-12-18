@@ -85,6 +85,7 @@ CloudDiskWindow::CloudDiskWindow(QWidget* parent) :
 
 
 
+    connect(ui->action_config, SIGNAL(triggered()), this, SLOT(showSettingDialog()));
     connect(ui->action_upload, SIGNAL(triggered()), ui->show_panel, SLOT(add()));
     connect(ui->show_panel, SIGNAL(enableBackbtn(bool)), ui->action_back, SLOT(setEnabled(bool)));
     connect(ui->show_panel, SIGNAL(enableBackbtn(bool)), ui->btn_back, SLOT(setEnabled(bool)));
@@ -156,4 +157,15 @@ void CloudDiskWindow::updateFinishedView()
 {
     ui->tableView_finished->resizeColumnsToContents();
     ui->tableView_finished->resizeRowsToContents();
+}
+
+void CloudDiskWindow::showSettingDialog()
+{
+    setting::GetInstance()->loadSetting();
+    if(settingDialog.exec() == QDialog::Accepted)
+    {
+        qDebug() << "save save save";
+        setting::GetInstance()->applySetting();
+        setting::GetInstance()->saveSetting();
+    }
 }

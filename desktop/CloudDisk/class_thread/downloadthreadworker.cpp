@@ -83,9 +83,8 @@ void DownloadThreadWorker::deleteDownloadTask(const QModelIndex& index)
     emit updateView();
     tmp->deleteTask();
 
-
 }
 void DownloadThreadWorker::openDownloadFileDir(const QModelIndex& index)
 {
-    QDesktopServices::openUrl(QUrl::fromLocalFile("file:///"));
+    QDesktopServices::openUrl(QUrl::fromLocalFile(setting::GetInstance()->getDownloadDir()));
 }

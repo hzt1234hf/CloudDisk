@@ -633,7 +633,7 @@ void ShowPanel::deleteObj()
 void ShowPanel::createDownloadTask(Obj_File* obj, Obj_Transfer* tmp)
 {
     QNetworkReply* reply = this->DownloadFile(obj->id, tmp);
-    reply->setReadBufferSize(40960);
+    reply->setReadBufferSize(setting::GetInstance()->getSingleLimitDownloadSpeed());
     tmp->setReply(reply);
 
     connect(reply, SIGNAL(downloadProgress(qint64, qint64)), tmp, SLOT(downloadProgress(qint64, qint64)));

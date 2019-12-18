@@ -30,6 +30,7 @@
 #include "comdef.h"
 #include "../serverconnect.h"
 #include "obj_transfer.h"
+#include "class_global/setting.h"
 
 
 

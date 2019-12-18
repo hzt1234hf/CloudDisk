@@ -17,12 +17,13 @@ Obj_Transfer::Obj_Transfer(bool isDownload, Obj_File* obj, QNetworkReply* reply,
 
 bool Obj_Transfer::openFile()
 {
-    QFileInfo f(obj->name);
+    qDebug() << setting::GetInstance()->getDownloadDir() + "/" + obj->name;
+    QFileInfo f(setting::GetInstance()->getDownloadDir() + "/" + obj->name);
     if(f.exists() == true)
     {
         if(curStatus != FINISHED)
         {
-            file = new QFile(obj->name + ".tmp");
+            file = new QFile(setting::GetInstance()->getDownloadDir() + "/" + obj->name + ".tmp");
             return file->open(QIODevice::WriteOnly | QIODevice::Append);
         }
         else if(file)
@@ -37,7 +38,7 @@ bool Obj_Transfer::openFile()
     {
         if(file == nullptr)
         {
-            file = new QFile(obj->name + ".tmp");
+            file = new QFile(setting::GetInstance()->getDownloadDir() + "/" + obj->name + ".tmp");
         }
         return file->open(QIODevice::WriteOnly | QIODevice::Append);
     }
@@ -290,12 +291,14 @@ void Obj_Transfer::readData(QTime* time)
                 if(dataIsReady)
                 {
                     dataIsReady = false;
+//                    reply->setReadBufferSize(setting::GetInstance()->getSingleLimitDownloadSpeed());
                     file->write(reply->readAll());
                     file->flush();
 
                     this->setTransferSpeed(time->elapsed() - lastTime);
                     this->setReceivedSize(lastReceivedSize);
                     lastTime = time->elapsed();
+
                 }
                 if(curStatus == IS_FINISHING)
                 {
@@ -312,7 +315,7 @@ void Obj_Transfer::readData(QTime* time)
                 if(curStatus == FINISHED)
                 {
                     curStatus = STOPPED;
-                    file->rename(obj->name);
+                    file->rename(setting::GetInstance()->getDownloadDir() + "/" + obj->name);
                 }
                 if(file)
                 {

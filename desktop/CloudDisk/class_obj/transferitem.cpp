@@ -142,8 +142,8 @@ QVariant TransferItem::data(const QModelIndex& index, int role) const
                         break;
                     case InfoRole_3:    // 3 下载进度
                         {
-                            if(m_datum[index.row()]->objIsFinished() == false)
-                                return m_datum[index.row()]->objTransferRate();
+//                            if(m_datum[index.row()]->objIsFinished() == false)
+                            return m_datum[index.row()]->objTransferRate();
                         }
                         break;
                     case OperatorRole_1:// 4
