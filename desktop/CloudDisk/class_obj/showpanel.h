@@ -29,7 +29,7 @@
 #include "obj_frame.h"
 #include "comdef.h"
 #include "../serverconnect.h"
-#include "obj_transfer.h"
+#include "obj_transfer_download.h"
 #include "class_global/setting.h"
 
 
@@ -67,13 +67,10 @@ private:
     bool singleSelected = true;     // 单选模式
     QList<obj_frame*> selectedObj;  // 选中对象数组
 
-    QTime timer;                    // 定时器
-    int lastTime = 0;               // 上一次时间
-    const int TimeInterval = 1000;   // 时间间隔
 
-    QList<Obj_Transfer*> file_download;
-    QList<Obj_Transfer*> file_upload;
-    QList<Obj_Transfer*> file_finished;
+    QList<Obj_Transfer_Download*> file_download;
+    QList<Obj_Transfer_Download*> file_upload;
+    QList<Obj_Transfer_Download*> file_finished;
 
 
 
@@ -103,6 +100,7 @@ private:
     void AddFolder(QString name, long parentid);
     void DeleteFolder(long id);
     void UploadFile(QString);
+    void UploadFile(QString, qint64, qint64);
     QNetworkReply* GetFile(long id);
     void DeleteFile(long fileid);
     QNetworkReply* DownloadFile(long fileid, Obj_Transfer* tmp);   // 未编写-over
@@ -139,7 +137,7 @@ public slots:
     void addNewFolder();
     void deleteObj();
 
-    void createDownloadTask(Obj_File*, Obj_Transfer*);
+    void createDownloadTask(Obj_File*, Obj_Transfer_Download*);
 
 protected:
     void mousePressEvent(QMouseEvent* event) override;

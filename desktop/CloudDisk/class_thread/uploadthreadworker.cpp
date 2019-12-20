@@ -1,11 +1,11 @@
 #include "uploadthreadworker.h"
 
-UploadThreadWorker::UploadThreadWorker(QObject* parent) : QObject(parent)
+UploadThreadWorker::UploadThreadWorker(QObject* parent) : BaseThreadWorker(parent)
 {
 
 }
 
-QList<Obj_Transfer*>& UploadThreadWorker::getData()
+void UploadThreadWorker::continuousReadData()
 {
-    return m_datum;
+    BaseThreadWorker::continuousReadData();
 }

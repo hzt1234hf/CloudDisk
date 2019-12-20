@@ -11,8 +11,12 @@ class TransferItem : public QAbstractTableModel
 {
     Q_OBJECT
 
+private:
+
 public:
+    explicit TransferItem(QObject* parent = nullptr);
     explicit TransferItem(QList<Obj_Transfer*>& m_datum, QObject* parent = nullptr);
+
 
     // Header:
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
@@ -24,9 +28,17 @@ public:
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
 
     Qt::ItemFlags flags(const QModelIndex& index) const override;
+
+    QList<Obj_Transfer*>& getSelfDatum();
+
+
+private:
+    QList<Obj_Transfer*>& m_datum;
+    QList<Obj_Transfer*> self_datum;
+
+public:
     enum
     {
-//        NameRole = Qt::UserRole + 1,
         NameRole = 0,
         InfoRole_1,
         InfoRole_2,
@@ -35,13 +47,13 @@ public:
         OperatorRole_2,
         OperatorRole_3,
     };
+
+signals:
+
 public slots:
     void addData(Obj_Transfer*);
     void update();
 
-private:
-
-    QList<Obj_Transfer*>& m_datum;
 };
 
 #endif // TRANSFERITEM_H

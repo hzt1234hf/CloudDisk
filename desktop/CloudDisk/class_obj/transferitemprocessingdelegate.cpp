@@ -50,20 +50,28 @@ void TransferItemProcessingDelegate::paint(QPainter* painter, const QStyleOption
                 if (option.state & QStyle::State_Selected)
                     painter->fillRect(option.rect, option.palette.highlight());
 
-                itemProgressBar->paintQProgressBar(painter, option, index);
-
+                if(index.data().toList()[0].toBool())
+                {
+                    painter->save();
+                    painter->drawText(option.rect, Qt::AlignCenter | Qt::AlignHCenter, index.data().toList()[1].toString());
+                    painter->restore();
+                }
+                else
+                    itemProgressBar->paintQProgressBar(painter, option, index);
             }
             break;
         case TransferItem::OperatorRole_1:// 4
             {
-//                QStyledItemDelegate::paint(painter, viewOption, index);
-
                 if (option.state & QStyle::State_Selected)
                     painter->fillRect(option.rect, option.palette.highlight());
-                if(index.data().toBool())
+
+                auto res = index.data().toList();
+                if(res[0] == true)
                     itemButton1->changeStyleSheet("pause");
-                else
+                else if(res[1] == false)
                     itemButton1->changeStyleSheet("play");
+                else
+                    itemButton1->changeStyleSheet("file");
                 itemButton1->paintButton(painter, option, mousePos);
             }
             break;
@@ -72,6 +80,10 @@ void TransferItemProcessingDelegate::paint(QPainter* painter, const QStyleOption
                 if (option.state & QStyle::State_Selected)
                     painter->fillRect(option.rect, option.palette.highlight());
 
+                if(index.data().toBool())
+                    itemButton2->changeStyleSheet("folder");
+                else
+                    itemButton2->changeStyleSheet("cancle");
                 itemButton2->paintButton(painter, option, mousePos);
             }
             break;
@@ -79,7 +91,10 @@ void TransferItemProcessingDelegate::paint(QPainter* painter, const QStyleOption
             {
                 if (option.state & QStyle::State_Selected)
                     painter->fillRect(option.rect, option.palette.highlight());
-
+                if(index.data().toBool())
+                    itemButton3->changeStyleSheet("cancle");
+                else
+                    itemButton3->changeStyleSheet("folder");
                 itemButton3->paintButton(painter, option, mousePos);
             }
             break;
@@ -354,7 +369,8 @@ ItemProgressBar::ItemProgressBar(): progressBarWidget(new QProgressBar())
 void ItemProgressBar::paintQProgressBar(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index)
 {
 
-    int data = index.data().toInt();
+    QList<QVariant> result = index.data().toList();
+    int data = result[1].toInt();
     double progress;
     if(data > 100)
         progress = 100;

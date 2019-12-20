@@ -3,21 +3,28 @@
 
 #include <QObject>
 
-#include "../class_obj/obj_frame.h"
-#include "../class_obj/obj_transfer.h"
+#include "../class_obj/obj_transfer_download.h"
+#include "basethreadworker.h"
 
-class UploadThreadWorker : public QObject
+class UploadThreadWorker : public BaseThreadWorker
 {
     Q_OBJECT
+
+public:
+
+private:
+
 public:
     explicit UploadThreadWorker(QObject* parent = nullptr);
-    QList<Obj_Transfer*>& getData();
+
 private:
-    QList<Obj_Transfer*> m_datum;
 
 signals:
 
 public slots:
+    /* 线程相关 */
+    void continuousReadData() override;
+
 };
 
 #endif // UPLOADTHREADWORKER_H

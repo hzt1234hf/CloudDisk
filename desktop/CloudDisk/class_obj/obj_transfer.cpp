@@ -1,12 +1,11 @@
 #include "obj_transfer.h"
 
-
 Obj_Transfer::Obj_Transfer()
 {
 
 }
 
-Obj_Transfer::Obj_Transfer(bool isDownload, Obj_File* obj, QNetworkReply* reply, double totalSize): Obj_Transfer()
+Obj_Transfer::Obj_Transfer(bool isDownload, Obj_File* obj, QNetworkReply* reply, int totalSize): Obj_Transfer()
 {
     this->isDownload = isDownload;
     this->obj = obj;
@@ -14,6 +13,7 @@ Obj_Transfer::Obj_Transfer(bool isDownload, Obj_File* obj, QNetworkReply* reply,
     this->reply = reply;
 
 }
+
 
 bool Obj_Transfer::openFile()
 {
@@ -44,13 +44,15 @@ bool Obj_Transfer::openFile()
     }
 }
 
+
+
 void Obj_Transfer::start()
 {
     if(curStatus == NONE)
     {
         curStatus = IS_TRANSMITTING;
     }
-    else if(curStatus == STOPPED)
+    else if(curStatus == PAUSED || curStatus == STOPPED)
     {
         isBreadpointResume = true;
         curStatus = IS_TRANSMITTING;
@@ -68,9 +70,9 @@ void Obj_Transfer::stop()
 
 void Obj_Transfer::deleteTask()
 {
+    curStatus = IS_DELETTING;
     if(reply)
         reply->abort();
-    curStatus = IS_DELETTING;
 }
 
 Obj_File* Obj_Transfer::getObj()
@@ -102,21 +104,21 @@ QString Obj_Transfer::objTotalSizeStr() const
     return "-";
 }
 
-QString Obj_Transfer::objReceivedSizeStr() const
+QString Obj_Transfer::objTransferedSizeStr() const
 {
-    if(receivedSize > 0)
+    if(transferedSize > 0)
     {
 //        switch(fileReceivedSizeUint)
         switch(fileTotalSizeUnit)
         {
             case B:
-                return QString::number(receivedSize, 'f', 2) + "B";
+                return QString::number(transferedSize, 'f', 2) + "B";
             case KB:
-                return QString::number(receivedSize / 1024.0, 'f', 2) + "KB";
+                return QString::number(transferedSize / 1024.0, 'f', 2) + "KB";
             case MB:
-                return QString::number(receivedSize / 1024.0 / 1024.0, 'f', 2) + "MB";
+                return QString::number(transferedSize / 1024.0 / 1024.0, 'f', 2) + "MB";
             case GB:
-                return QString::number(receivedSize / 1024.0 / 1024.0 / 1024.0, 'f', 2) + "GB";
+                return QString::number(transferedSize / 1024.0 / 1024.0 / 1024.0, 'f', 2) + "GB";
         }
     }
     return "-";
@@ -124,7 +126,7 @@ QString Obj_Transfer::objReceivedSizeStr() const
 
 QString Obj_Transfer::objSizeScale() const
 {
-    return objReceivedSizeStr() + "/" + objTotalSizeStr();
+    return objTransferedSizeStr() + "/" + objTotalSizeStr();
 }
 
 QString Obj_Transfer::objTransferSpeed() const
@@ -150,7 +152,7 @@ int Obj_Transfer::objTransferRate() const
 {
     if(totalSize < 0.01)
         return 0;
-    return (double)receivedSize * 10 / totalSize * 10;
+    return (double)transferedSize * 10 / totalSize * 10;
 }
 
 bool Obj_Transfer::objIsDownload() const
@@ -170,18 +172,19 @@ bool Obj_Transfer::objIsTransmitting() const
 
 bool Obj_Transfer::objIsStopped() const
 {
-    return curStatus == STOPPED;
+    return curStatus == PAUSED;
 }
 
-qint64 Obj_Transfer::objReceivedSize() const
+qint64 Obj_Transfer::objTransferedSize() const
 {
-    return receivedSize;
+    return transferedSize;
 }
 
 void Obj_Transfer::setTransferSpeed(int interval)
 {
-    qint64 transferBytes = totalSize - curTotalSize + lastReceivedSize - receivedSize;
-    transferSpeed = transferBytes * 1000.0 / interval;
+    qint64 transferBytes = totalSize - curTotalSize + lastTransferedSize - transferedSize;
+    qDebug() << lastTransferedSize << "   " << transferedSize << "   " << (lastTransferedSize - transferedSize) / 1024.0 << "  " << curTotalSize << "  " << totalSize;
+    transferSpeed = transferBytes * 1000.0 / interval + 1;
     if(transferSpeed > 1073741824.0)
         fileTransferSpeedUnit = GB;
     else if(transferSpeed > 1048576.0)
@@ -205,9 +208,9 @@ void Obj_Transfer::setTotalSize(qint64 size)
         fileTotalSizeUnit = B;
 }
 
-void Obj_Transfer::setReceivedSize(qint64 size)
+void Obj_Transfer::setTransferedSize(qint64 size)
 {
-    this->receivedSize = size + totalSize - curTotalSize;
+    this->transferedSize = size + totalSize - curTotalSize;
 //    fileReceivedSizeUint = B;
 //    if(receivedSize > 1024)
 //    {
@@ -226,9 +229,9 @@ void Obj_Transfer::setReceivedSize(qint64 size)
 //    }
 }
 
-void Obj_Transfer::appendReceivedSize(qint64 size)
+void Obj_Transfer::appendTransferedSize(qint64 size)
 {
-    this->receivedSize += size;
+    this->transferedSize += size;
 }
 
 void Obj_Transfer::setFinished(bool is_finish)
@@ -246,115 +249,17 @@ void Obj_Transfer::setReply(QNetworkReply* reply)
     this->reply = reply;
 }
 
-
-
-
-
-void Obj_Transfer::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)
-{
-    lastReceivedSize = bytesReceived;
-    if(isBreadpointResume == false && (totalSize <= 0 || bytesTotal != totalSize))
-    {
-        this->setTotalSize(bytesTotal);
-    }
-    if(curTotalSize <= 0 || bytesTotal != curTotalSize)
-        curTotalSize = bytesTotal;
-}
-
 void Obj_Transfer::error(QNetworkReply::NetworkError code)
 {
     qDebug() << "error:   " << code;
-    curStatus = HAS_ERROR;
+    if(curStatus == IS_TRANSMITTING)
+        curStatus = HAS_ERROR;
 }
 
 void Obj_Transfer::finished()
 {
-    if(curStatus != IS_PAUSING && curStatus != STOPPED)
+    if(curStatus == IS_TRANSMITTING)
     {
         curStatus = IS_FINISHING;
     }
-}
-
-void Obj_Transfer::readyRead()
-{
-    dataIsReady = true;
-}
-
-void Obj_Transfer::readData(QTime* time)
-{
-    switch(curStatus)
-    {
-
-        case IS_FINISHING:
-        case IS_TRANSMITTING:
-            {
-                if(dataIsReady)
-                {
-                    dataIsReady = false;
-//                    reply->setReadBufferSize(setting::GetInstance()->getSingleLimitDownloadSpeed());
-                    file->write(reply->readAll());
-                    file->flush();
-
-                    this->setTransferSpeed(time->elapsed() - lastTime);
-                    this->setReceivedSize(lastReceivedSize);
-                    lastTime = time->elapsed();
-
-                }
-                if(curStatus == IS_FINISHING)
-                {
-                    curStatus = FINISHED;
-                }
-            }
-            break;
-
-        case IS_DELETTING:
-        case IS_PAUSING:
-        case HAS_ERROR:
-        case FINISHED:
-            {
-                if(curStatus == FINISHED)
-                {
-                    curStatus = STOPPED;
-                    file->rename(setting::GetInstance()->getDownloadDir() + "/" + obj->name);
-                }
-                if(file)
-                {
-                    file->close();
-//                    file->deleteLater();
-                    file = nullptr;
-                }
-                if(reply)
-                {
-                    reply->deleteLater();
-                    reply = nullptr;
-                }
-
-                if(curStatus == HAS_ERROR)
-                {
-                }
-                else if(curStatus == IS_PAUSING)
-                {
-                    curStatus = STOPPED;
-                }
-                else if(curStatus == IS_DELETTING)
-                {
-                    this->deleteLater();
-                    curStatus = DELETED;
-                }
-            }
-            break;
-        case DELETED:
-        case STOPPED:
-            {
-
-            } break;
-        case NONE:
-        default:
-            {
-                qDebug() << "Unknow Status!";
-            }
-            break;
-    }
-
-    emit updateView();
 }

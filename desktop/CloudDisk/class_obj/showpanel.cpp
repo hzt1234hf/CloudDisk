@@ -16,7 +16,6 @@ ShowPanel::ShowPanel(QWidget* parent) : QWidget(parent)
     connect(ServerConnect::getInstance().getNetworkAccessManager(), SIGNAL(finished(QNetworkReply*)), this, SLOT(requestCallback(QNetworkReply*)));
     connect(this, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(createPanelToolPalette(const QPoint&)));
     refreshCurFolderInfo();
-    timer.start();
 }
 
 ShowPanel::~ShowPanel()
@@ -224,7 +223,26 @@ void ShowPanel::UploadFile(QString filePath)
     multiPart->setParent(reply);// delete the multiPart with the reply
     replyMap.insert(reply, requestType::UPLOAD_FILE);
 }
+void ShowPanel::UploadFile(QString filePath, qint64 startPos, qint64 size)
+{
+    QHttpMultiPart* multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
 
+    QHttpPart filePart;
+    filePart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/octet-stream"));
+    filePart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"file\"; filename=" + QFileInfo(filePath).fileName() + ""));
+    QFile* file = new QFile(filePath);
+    file->open(QIODevice::ReadOnly);
+    file->seek(startPos);
+    QByteArray fileData = file->read(size);
+    filePart.setBody(fileData);
+    file->setParent(multiPart); // we cannot delete the file now, so delete it with the multiPart
+
+    multiPart->append(filePart);
+
+    QNetworkReply* reply = ServerConnect::getInstance().http_post("/folders/" + QString::number(this->curFolderId), multiPart);
+    multiPart->setParent(reply);// delete the multiPart with the reply
+    replyMap.insert(reply, requestType::UPLOAD_FILE);
+}
 QNetworkReply* ShowPanel::GetFile(long id)
 {
     QNetworkReply* reply = ServerConnect::getInstance().http_get("/files/" + QString::number(id) + "?query=info");
@@ -243,7 +261,7 @@ QNetworkReply* ShowPanel::DownloadFile(long fileid, Obj_Transfer* tmp)
     if(tmp->objIsStopped())
     {
         qDebug() << "----------retrans--------";
-        reply = ServerConnect::getInstance().http_get_download("/files/" + QString::number(fileid), true, tmp->objReceivedSize());
+        reply = ServerConnect::getInstance().http_get_download("/files/" + QString::number(fileid), true, tmp->objTransferedSize());
     }
     else
     {
@@ -630,7 +648,7 @@ void ShowPanel::deleteObj()
     }
 }
 
-void ShowPanel::createDownloadTask(Obj_File* obj, Obj_Transfer* tmp)
+void ShowPanel::createDownloadTask(Obj_File* obj, Obj_Transfer_Download* tmp)
 {
     QNetworkReply* reply = this->DownloadFile(obj->id, tmp);
     reply->setReadBufferSize(setting::GetInstance()->getSingleLimitDownloadSpeed());
@@ -641,7 +659,6 @@ void ShowPanel::createDownloadTask(Obj_File* obj, Obj_Transfer* tmp)
     connect(reply, SIGNAL(finished()), tmp, SLOT(finished()));
     connect(reply, SIGNAL(readyRead()), tmp, SLOT(readyRead()));
     tmp->start();
-
 
 //    emit addDownloadFile(tmp);
 }

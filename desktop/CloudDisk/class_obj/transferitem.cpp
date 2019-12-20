@@ -1,5 +1,10 @@
 #include "transferitem.h"
 
+TransferItem::TransferItem(QObject* parent): m_datum(self_datum)
+{
+
+}
+
 TransferItem::TransferItem(QList<Obj_Transfer*>& d, QObject* parent): m_datum(d)
     , QAbstractTableModel(parent)
 {
@@ -142,23 +147,36 @@ QVariant TransferItem::data(const QModelIndex& index, int role) const
                         break;
                     case InfoRole_3:    // 3 下载进度
                         {
-//                            if(m_datum[index.row()]->objIsFinished() == false)
-                            return m_datum[index.row()]->objTransferRate();
+                            QList<QVariant> result;
+                            result.push_back(QVariant(m_datum[index.row()]->objIsFinished()));
+                            if(m_datum[index.row()]->objIsFinished() == false)
+                                result.push_back(QVariant(m_datum[index.row()]->objTransferRate()));
+                            else
+                            {
+                                if(m_datum[index.row()]->objIsDownload())
+                                    result.push_back("下载完成");
+                                else
+                                    result.push_back("上传完成");
+                            }
+                            return result;
                         }
                         break;
                     case OperatorRole_1:// 4
                         {
-                            return m_datum[index.row()]->objIsTransmitting();
+                            QList<QVariant> res;
+                            res.push_back(m_datum[index.row()]->objIsTransmitting());
+                            res.push_back(m_datum[index.row()]->objIsFinished());
+                            return res;
                         }
                         break;
                     case OperatorRole_2:// 5
                         {
-
+                            return m_datum[index.row()]->objIsFinished();
                         }
                         break;
                     case OperatorRole_3:// 6
                         {
-
+                            return m_datum[index.row()]->objIsFinished();
                         }
                         break;
                 }
@@ -177,6 +195,11 @@ Qt::ItemFlags TransferItem::flags(const QModelIndex& index) const
     if (!index.isValid())
         return QAbstractItemModel::flags(index);
     return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+}
+
+QList<Obj_Transfer*>& TransferItem::getSelfDatum()
+{
+    return self_datum;
 }
 
 void TransferItem::addData(Obj_Transfer* dataObj)

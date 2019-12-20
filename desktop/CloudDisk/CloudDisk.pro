@@ -31,10 +31,13 @@ SOURCES += \
         class_obj/obj_folder.cpp \
         class_obj/obj_frame.cpp \
         class_obj/obj_transfer.cpp \
+        class_obj/obj_transfer_download.cpp \
+        class_obj/obj_transfer_upload.cpp \
         class_obj/showpanel.cpp \
         class_obj/transferitem.cpp \
         class_obj/transferitemprocessingdelegate.cpp \
         class_obj/transferpanel.cpp \
+        class_thread/basethreadworker.cpp \
         class_thread/downloadthreadworker.cpp \
         class_thread/uploadthreadworker.cpp \
         login.cpp \
@@ -52,11 +55,14 @@ HEADERS += \
         class_obj/obj_folder.h \
         class_obj/obj_frame.h \
         class_obj/obj_transfer.h \
+        class_obj/obj_transfer_download.h \
+        class_obj/obj_transfer_upload.h \
         class_obj/showpanel.h \
         class_obj/transferitem.h \
         class_obj/transferitemprocessingdelegate.h \
         class_obj/transferpanel.h \
         class_obj/uploadthreadworker.h \
+        class_thread/basethreadworker.h \
         class_thread/downloadthreadworker.h \
         class_thread/uploadthreadworker.h \
         clouddiskwindow.h \

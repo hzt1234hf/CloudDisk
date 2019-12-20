@@ -41,8 +41,10 @@ private:
 
     TransferItem* downloadItemModel;
     TransferItem* uploadItemModel;
+    TransferItem* finishedItemModel;
     TransferItemProcessingDelegate* downloadDelegate;
     TransferItemProcessingDelegate* uploadDelegate;
+    TransferItemProcessingDelegate* finishedDelegate;
 
 signals:
     void runDownloadThread();

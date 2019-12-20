@@ -7,31 +7,28 @@
 #include <QElapsedTimer>
 #include <QDesktopServices>
 
-#include "../class_obj/obj_frame.h"
-#include "../class_obj/obj_transfer.h"
+#include "../class_obj/obj_transfer_download.h"
+#include "basethreadworker.h"
 
-class DownloadThreadWorker: public QObject
+class DownloadThreadWorker: public BaseThreadWorker
 {
     Q_OBJECT
 
 public:
-    QTime* time;
 
 private:
-    QList<Obj_Transfer*> m_datum;
-    bool isRunningWork = false; // 线程是否运行中
-    QTimer* timer;
 
 public:
     explicit DownloadThreadWorker(QObject* parent = nullptr);
-    QList<Obj_Transfer*>& getData();
+
+signals:
+    void readData(const QTime* time);
+    void addDownloadItem(Obj_Transfer_Download*);    // 添加Download文件对象
+    void createDownloadTask(Obj_File*, Obj_Transfer_Download*); // 创建Download任务
 
 public slots:
     /* 线程相关 */
-    void continuousReadData();
-    void work();        // 线程主函数
-    void stopWork();    // 停止线程任务
-    void startWork();   // 开始线程任务
+    void continuousReadData() override;
 
     /* 任务创建 */
     void createDownloadItem(Obj_File*);    // 创建Download文件对象
@@ -40,11 +37,7 @@ public slots:
     void deleteDownloadTask(const QModelIndex& index);
     void openDownloadFileDir(const QModelIndex& index);
 
-signals:
-    void readData(QTime* time);
-    void addDownloadItem(Obj_Transfer*);    // 添加Download文件对象
-    void createDownloadTask(Obj_File*, Obj_Transfer*); // 创建Download任务
-    void updateView();
+
 };
 
 #endif // DOWNLOADTHREADWORKER_H

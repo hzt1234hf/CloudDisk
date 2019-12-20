@@ -1,56 +1,30 @@
 #include "downloadthreadworker.h"
 
-DownloadThreadWorker::DownloadThreadWorker(QObject* parent) : QObject(parent)
+DownloadThreadWorker::DownloadThreadWorker(QObject* parent) : BaseThreadWorker(parent)
 {
 
 }
 
-QList<Obj_Transfer*>& DownloadThreadWorker::getData()
-{
-    return m_datum;
-}
 void DownloadThreadWorker::continuousReadData()
 {
-    time = new QTime();
-    timer = new QTimer(this);
+    BaseThreadWorker::continuousReadData();
     connect(timer, &QTimer::timeout, [ = ] {emit readData(time);});
-    timer->start(1000);
-    time->start();
-}
-
-void DownloadThreadWorker::work()
-{
-    for(;;)
-    {
-        if(isRunningWork)
-        {
-            QElapsedTimer t;
-            t.start();
-            while(t.elapsed() < 1000);
-        }
-    }
-}
-
-void DownloadThreadWorker::stopWork()
-{
-    isRunningWork = false;
-    timer->stop();
-}
-
-void DownloadThreadWorker::startWork()
-{
-    isRunningWork = true;
-    timer->start(1000);
 }
 
 
 void DownloadThreadWorker::createDownloadItem(Obj_File* obj)
 {
-    Obj_Transfer* tmp =  new Obj_Transfer(true, obj);
+    Obj_Transfer_Download* tmp =  new Obj_Transfer_Download(obj);
     if(tmp->openFile())
     {
         m_datum.push_back(tmp);
-        connect(this, &DownloadThreadWorker::readData, tmp, &Obj_Transfer::readData);
+        connect(this, &DownloadThreadWorker::readData, tmp, &Obj_Transfer_Download::readData);
+        connect(tmp, &Obj_Transfer_Download::movetoFinishedView, [ = ]
+        {
+            m_datum.removeOne(tmp);
+            emit updateView();
+            emit movetoFinishedView(tmp);
+        });
         emit createDownloadTask(obj, tmp);
     }
     else
@@ -71,7 +45,7 @@ void DownloadThreadWorker::switchDownloadTaskStatus(const QModelIndex& index)
         if(m_datum[index.row()]->openFile())
         {
             qDebug() << "22222";
-            emit createDownloadTask(m_datum[index.row()]->getObj(), m_datum[index.row()]);
+            emit createDownloadTask(m_datum[index.row()]->getObj(), reinterpret_cast<Obj_Transfer_Download*>(m_datum[index.row()]));
         }
     }
 }
@@ -86,5 +60,6 @@ void DownloadThreadWorker::deleteDownloadTask(const QModelIndex& index)
 }
 void DownloadThreadWorker::openDownloadFileDir(const QModelIndex& index)
 {
+//    m_datum[index.row()] // 打开文件地址
     QDesktopServices::openUrl(QUrl::fromLocalFile(setting::GetInstance()->getDownloadDir()));
 }
