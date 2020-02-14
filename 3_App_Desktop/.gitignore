@@ -1,5 +1,5 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # misc
-/build-CloudDisk-Desktop_Qt_5_13_2_MinGW_32_bit-Debug
+/build-CloudDisk-Desktop_*
 /CloudDisk/CloudDisk.pro.user
